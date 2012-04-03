@@ -61,4 +61,10 @@ class JiraConnection {
 		return $this->connection->getResolutionDateById($this->sessionKey, $id);
 	}
 
+	public function getUser($param1)
+	{
+		$this->login();
+		return $this->connection->getUser($this->sessionKey, $param1);
+	}
+
 }

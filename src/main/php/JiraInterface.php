@@ -76,23 +76,24 @@ class JiraInterface implements DashboardAugmenter
 		$userStories = $this->jiraConnection->getIssuesFromJqlSearch("type =\"User story\" and fixVersion =\"" . addslashes($dashboard->sprint->name) . "\"", 1000);
 
 		foreach ($userStories as $us) {
-			$cleanUserStory = $this->buildUserStory($us);
+			$cleanUserStory = $this->buildUserStory($dashboard, $us);
 			$dashboard->userStories[] = $cleanUserStory;
 		}
 	}
 
 	/**
+	 * @param \Dashboard $dashboard
 	 * @param $item
 	 * @param $buildSubTasks boolean true if should fetch sub-tasks
 	 * @return UserStory
 	 */
-	private function buildUserStory($item, $buildSubTasks = true)
+	private function buildUserStory(Dashboard $dashboard, $item, $buildSubTasks = true)
 	{
 		$userStory = new UserStory();
 		$userStory->key = $item->key;
-		$userStory->assignee = (array)$item->assignee;
+		$userStory->assignee = (array) $this->getParticipantGuidForJiraUser($dashboard, (string)$item->assignee);
 		$userStory->title = trim($item->summary);
-		$userStory->created = strtotime($item->created);
+		$userStory->created = strtotime($item->created); // $item->reporter
 		$userStory->updated = strtotime($item->updated);
 		$userStory->status = $this->statusList[(int)$item->status];
 		$userStory->numSubTasks = 0;
@@ -100,11 +101,11 @@ class JiraInterface implements DashboardAugmenter
 		$userStory->storyPoints = 0;
 		$userStory->estimatedSeconds = 0;
 		$userStory->isDone = ((int)$item->status == 6);
-		$userStory->guid = (string) $item->id;
+		$userStory->guid = (string)$item->id;
 
 		if ($buildSubTasks) {
 			foreach ($this->getSubTasks($item->key) as $subTask) {
-				$sub = $this->buildUserStory($subTask, false);
+				$sub = $this->buildUserStory($dashboard, $subTask, false);
 
 				$userStory->assignee = array_merge($userStory->assignee, $sub->assignee);
 				$userStory->activityLog = array_merge($userStory->activityLog, $sub->activityLog);
@@ -115,7 +116,7 @@ class JiraInterface implements DashboardAugmenter
 		}
 
 		// Make sure we only have unique entries
-		$userStory->assignee = array_unique($userStory->assignee);
+		$userStory->assignee = array_values(array_unique($userStory->assignee));
 
 		// Fetch resolved date
 		$this->extractResolutionDate($item, $userStory);
@@ -124,7 +125,16 @@ class JiraInterface implements DashboardAugmenter
 		$this->extractCustomFields($item, $userStory);
 
 		// Build up timeline for this user story
-		$userStory->activityLog[] = $this->buildCreateActivityLog($userStory);
+		$ret = new ActivityLogItem();
+
+		$ret->time = $userStory->created;
+		$ret->description = $userStory->title . " was created";
+		$ret->pointsDelta = $userStory->storyPoints;
+		$ret->source = "Jira";
+		$ret->guid = "jira" . $userStory->guid . "created";
+		$ret->who = $this->getParticipantGuidForJiraUser($dashboard, $item->reporter);
+
+		$userStory->activityLog[] = $ret;
 
 		if ($userStory->created != $userStory->updated) {
 			$userStory->activityLog[] = $this->buildUpdateActivityLog($userStory);
@@ -135,6 +145,18 @@ class JiraInterface implements DashboardAugmenter
 		}
 
 		return $userStory;
+	}
+
+	private function getParticipantGuidForJiraUser(Dashboard $dashboard, $jiraUserName)
+	{
+		$participantGuid = $dashboard->getParticipantGuidByUsername($jiraUserName);
+
+		if ($participantGuid == null) {
+			$jiraUser = $this->jiraConnection->getUser($jiraUserName);
+			$participantGuid = $dashboard->createParticipant($jiraUser->email, $jiraUser->fullname, $jiraUser->name);
+		}
+
+		return $participantGuid;
 	}
 
 	private function extractResolutionDate($us, UserStory $userStory)
@@ -161,23 +183,6 @@ class JiraInterface implements DashboardAugmenter
 	{
 		$jql = "parent = \"" . addslashes($parentKey) . "\"";
 		$ret = $this->jiraConnection->getIssuesFromJqlSearch($jql);
-
-		return $ret;
-	}
-
-	/**
-	 * @param \UserStory $userStory
-	 * @return ActivityLogItem
-	 */
-	private function buildCreateActivityLog(UserStory $userStory)
-	{
-		$ret = new ActivityLogItem();
-
-		$ret->time = $userStory->created;
-		$ret->description = $userStory->title . " was created";
-		$ret->pointsDelta = $userStory->storyPoints;
-		$ret->source = "Jira";
-		$ret->guid = "jira". $userStory->guid . "created";
 
 		return $ret;
 	}
@@ -241,6 +246,4 @@ class JiraInterface implements DashboardAugmenter
 			unset($userStory->activityLog);
 		}
 	}
-
-
 }

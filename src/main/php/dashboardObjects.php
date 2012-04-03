@@ -1,12 +1,5 @@
 <?php
 
-class Burndown
-{
-	public $numberToDo;
-	public $numberInProgress;
-	public $numberDone;
-}
-
 class Sprint
 {
 	public $name;
@@ -105,7 +98,31 @@ class UserStory
 	public $activityLog;
 }
 
-class SprintDay {
+class Participant
+{
+	/**
+	 * @var string
+	 */
+	public $guid;
+
+	/**
+	 * @var string
+	 */
+	public $email;
+
+	/**
+	 * @var string
+	 */
+	public $displayName;
+
+	/**
+	 * @var string[]
+	 */
+	public $aliases;
+}
+
+class SprintDay
+{
 	/**
 	 * @var int
 	 */
@@ -117,9 +134,19 @@ class SprintDay {
 	public $date;
 
 	/**
-	 * @var Burndown
+	 * @var int
 	 */
-	public $burnDown;
+	public $numberToDo;
+
+	/**
+	 * @var int
+	 */
+	public $numberInProgress;
+
+	/**
+	 * @var int
+	 */
+	public $numberDone;
 }
 
 class ActivityLogItem
@@ -196,6 +223,46 @@ class Dashboard
 	 * @var UserStory[]
 	 */
 	public $userStories;
+
+	/**
+	 * @var Participant[]
+	 */
+	public $participants;
+
+	/**
+	 * Gets the GUID of a participant by email, if it's not available then
+	 * it will get created
+	 *
+	 * @param string $param1 email of the participant
+	 * @return string
+	 */
+	public function getParticipantGuidByUsername($param1)
+	{
+		foreach (((array)$this->participants) as $participant) {
+			if (in_array($param1, $participant->aliases)) {
+				return $participant->guid;
+			}
+		}
+
+		return null;
+	}
+
+	public function createParticipant($email, $displayName, $username)
+	{
+		$participant = new Participant();
+		$participant->email = $email;
+		$participant->guid = sha1($email);
+		$participant->displayName = $displayName;
+		$participant->aliases = array_unique(array($username, $email));
+
+		if (!is_array($this->participants)) {
+			$this->participants = array();
+		}
+
+		$this->participants[] = $participant;
+
+		return $participant->guid;
+	}
 }
 
 interface DashboardAugmenter
