@@ -21,11 +21,6 @@ class Sprint
 	public $pointsToDo;
 	public $pointsDone;
 	public $pointsTotal;
-
-	/**
-	 * @var Burndown
-	 */
-	public $burnDown;
 }
 
 class BuildStatus
@@ -110,14 +105,58 @@ class UserStory
 	public $activityLog;
 }
 
+class SprintDay {
+	/**
+	 * @var int
+	 */
+	public $dayNum;
+
+	/**
+	 * @var int
+	 */
+	public $date;
+
+	/**
+	 * @var Burndown
+	 */
+	public $burnDown;
+}
+
 class ActivityLogItem
 {
+	/**
+	 * @var string
+	 */
 	public $description;
+
+	/**
+	 * @var int
+	 */
 	public $time;
+
+	/**
+	 * @var int
+	 */
 	public $pointsDelta;
+
+	/**
+	 * @var string
+	 */
 	public $who;
+
+	/**
+	 * @var string
+	 */
 	public $source;
 
+	/**
+	 * @var int
+	 */
+	public $dayNum;
+
+	/**
+	 * @var string
+	 */
 	public $guid;
 }
 
@@ -127,6 +166,11 @@ class Dashboard
 	public $generatedTime;
 
 	public $quote;
+
+	/**
+	 * @var SprintDay[]
+	 */
+	public $sprintDays;
 
 	/**
 	 * @var Sprint
