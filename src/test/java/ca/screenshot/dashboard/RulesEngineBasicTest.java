@@ -24,8 +24,8 @@ public class RulesEngineBasicTest {
 	private KnowledgeRuntimeLogger logger;
 	private StatefulKnowledgeSession ksession;
 
-	private static String helloRule = "package com.hybris.oms\n" +
-											  "import com.hybris.oms.RulesEngineBasicTest.Message\n" +
+	private static String helloRule = "package ca.screenshot.dashboard\n" +
+											  "import ca.screenshot.dashboard.RulesEngineBasicTest.Message\n" +
 											  "rule \"Hello World\"\n" +
 											  "      dialect \"mvel\"\n" +
 											  "  when\n" +
