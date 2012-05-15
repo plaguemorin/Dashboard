@@ -1,5 +1,6 @@
 package ca.screenshot.dashboard;
 
+import junit.framework.Assert;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
 import org.drools.builder.KnowledgeBuilder;
@@ -24,25 +25,13 @@ public class RulesEngineBasicTest {
 	private KnowledgeRuntimeLogger logger;
 	private StatefulKnowledgeSession ksession;
 
-	private static String helloRule = "package ca.screenshot.dashboard\n" +
-											  "import ca.screenshot.dashboard.RulesEngineBasicTest.Message\n" +
-											  "rule \"Hello World\"\n" +
-											  "      dialect \"mvel\"\n" +
-											  "  when\n" +
-											  "      m : RulesEngineBasicTest.Message( status == Message.HELLO, message : message )\n" +
-											  "  then\n" +
-											  "       \n" +
-											  "      modify ( m ) { message = \"Goodbyte cruel world\",\n" +
-											  "                     status = Message.GOODBYE };\n" +
-											  "end";
-
 
 	@Before
 	public void setUp() {
 		kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
 
 		// this will parse and compile in one step
-		kbuilder.add(ResourceFactory.newByteArrayResource(helloRule.getBytes()), ResourceType.DRL);
+		kbuilder.add(ResourceFactory.newClassPathResource("helloWorld.drl"), ResourceType.DRL);
 
 		// Check the builder for errors
 		if (kbuilder.hasErrors()) {
@@ -77,6 +66,8 @@ public class RulesEngineBasicTest {
 		ksession.fireAllRules();
 		logger.close();
 		ksession.dispose();
+
+		Assert.assertEquals(Message.GOODBYE, message.getStatus());
 	}
 
 	public class Message {
@@ -86,6 +77,9 @@ public class RulesEngineBasicTest {
 		private String message;
 		private int status;
 
+		public Message() {
+
+		}
 
 		public void setMessage(String message) {
 			this.message = message;
