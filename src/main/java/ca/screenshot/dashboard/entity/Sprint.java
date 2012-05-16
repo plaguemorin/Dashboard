@@ -1,5 +1,9 @@
 package ca.screenshot.dashboard.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+
 /**
  * @author plaguemorin
  *         Date: 16/05/12
@@ -8,6 +12,7 @@ package ca.screenshot.dashboard.entity;
 public class Sprint {
 	private String sprintName;
 	private String teamName;
+	private List<UserStory> userStoryList = new ArrayList<>();
 
 	public String getSprintName() {
 		return sprintName;
@@ -23,5 +28,9 @@ public class Sprint {
 
 	public String getTeamName() {
 		return teamName;
+	}
+
+
+	public void updateOrCreate(final UserStory userStory) {
 	}
 }

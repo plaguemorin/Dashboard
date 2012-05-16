@@ -1,9 +1,6 @@
 package ca.screenshot.dashboard.service;
 
 import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.entity.UserStory;
-
-import java.util.List;
 
 /**
  * @author plaguemorin
@@ -12,7 +9,7 @@ import java.util.List;
  */
 public interface UserStoryImporter {
 
-	List<UserStory> downloadUserStories(final Sprint sprint);
+	void updateUserStories(final Sprint sprint);
 
 	void findLatestSprint(Sprint sprint);
 }
