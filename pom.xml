@@ -27,19 +27,22 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.axis2</groupId>
-				<artifactId>axis2-wsdl2code-maven-plugin</artifactId>
-				<version>1.6.2</version>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>axistools-maven-plugin</artifactId>
+				<version>1.4</version>
+				<configuration>
+					<sourceDirectory>${basedir}/wsdl/</sourceDirectory>
+					<outputDirectory>${basedir}/target/generated-sources/wsdl2java</outputDirectory>
+					<packageSpace>ca.screenshot.dashboard.external</packageSpace>
+					<testCases>false</testCases>
+					<serverSide>false</serverSide>
+					<subPackageByFileName>true</subPackageByFileName>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
-							<goal>wsdl2code</goal>
+							<goal>wsdl2java</goal>
 						</goals>
-						<configuration>
-							<packageName>ca.screenshot.dashboard.jirasoap</packageName>
-							<wsdlFile>wsdl/jira.wsdl</wsdlFile>
-							<databindingName>xmlbeans</databindingName>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -48,8 +51,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.axis2</groupId>
-			<artifactId>axis2</artifactId>
+			<groupId>axis</groupId>
+			<artifactId>axis</artifactId>
 			<version>1.4</version>
 		</dependency>
 
@@ -186,10 +189,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache</groupId>
-		</dependency>
-
-		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib</artifactId>
 			<version>2.2</version>
@@ -322,6 +321,7 @@
 			<artifactId>camel-core</artifactId>
 			<version>${camel-core.version}</version>
 		</dependency>
+
 	</dependencies>
 
 </project>

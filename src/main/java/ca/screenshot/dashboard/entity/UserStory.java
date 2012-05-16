@@ -1,4 +1,6 @@
-package ca.screenshot.dashboard;
+package ca.screenshot.dashboard.entity;
+
+import ca.screenshot.dashboard.AbstractValueObject;
 
 /**
  */
