@@ -1,20 +1,20 @@
-package ca.screenshot.dashboard;
+package ca.screenshot.dashboard.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class ActivityStreamItem extends AbstractValueObject {
-	private Actor actor;
+	private Participant actor;
 	private Generator generator;
 
 	private String title;
 	private String content;
 
-	public Actor getActor() {
+	public Participant getActor() {
 		return actor;
 	}
 
-	public void setActor(Actor actor) {
+	public void setParticipant(Participant actor) {
 		this.actor = actor;
 	}
 

@@ -1,15 +1,21 @@
-package ca.screenshot.dashboard.service;
+package ca.screenshot.dashboard.service.providers.jira;
 
+import ca.screenshot.dashboard.entity.Participant;
 import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.entity.UserStory;
+import ca.screenshot.dashboard.entity.UserStoryTask;
 import ca.screenshot.dashboard.external.jira.RemoteIssue;
+import ca.screenshot.dashboard.external.jira.RemoteUser;
 import ca.screenshot.dashboard.external.jira.RemoteVersion;
+import ca.screenshot.dashboard.service.providers.ParticipantProvider;
+import ca.screenshot.dashboard.service.providers.SprintProvider;
+import ca.screenshot.dashboard.service.providers.UserStoryProvider;
+import ca.screenshot.dashboard.service.repositories.ParticipantRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 import static java.util.Collections.sort;
@@ -21,41 +27,60 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  *         Time: 5:39 PM
  */
 @Service
-public class JiraImporter implements UserStoryImporter {
-	private static final Logger LOGGER = LoggerFactory.getLogger(JiraImporter.class);
+public class JiraProvider implements UserStoryProvider, ParticipantProvider, SprintProvider {
+	private static final Logger LOGGER = LoggerFactory.getLogger(JiraProvider.class);
 
 	@Autowired
 	private JiraConnector jiraConnector;
 
-	@PostConstruct
-	public void init() {
-		final Sprint thisSprint = new Sprint();
-		thisSprint.setTeamName("CANADIENS");
-
-		this.findLatestSprint(thisSprint);
-		this.updateUserStories(thisSprint);
-	}
-
+	@Autowired
+	private ParticipantRepository participantRepository;
 
 	@Override
-	public void updateUserStories(final Sprint sprint) {
+	public List<UserStory> getUserStoriesForSprint(final Sprint sprint) {
 		if (isEmpty(sprint.getSprintName())) {
 			throw new IllegalArgumentException("Sprint name cannot be empty when using the JIRA Importer");
 		}
 
+		final List<UserStory> theReturnList = new ArrayList<>();
 		final List<RemoteIssue> issuesFromJqlSearch = this.jiraConnector.getIssuesFromJqlSearch("type =\"User story\" and fixVersion =\"" + sprint.getSprintName() + "\"", 1000);
 
 		for (final RemoteIssue remoteIssue : issuesFromJqlSearch) {
 			LOGGER.info("Got Issue: [" + remoteIssue.getKey() + "] " + remoteIssue.getSummary());
 
-			sprint.updateOrCreate(this.convertToUserStory(remoteIssue));
+			theReturnList.add(this.convertToUserStory(remoteIssue));
 		}
 
+		// Populate Sub-tasks
+		for (final UserStory userStory : theReturnList) {
+			final List<RemoteIssue> subIssues = this.jiraConnector.getIssuesFromJqlSearch("parent =\"" + userStory.getRemoteIdentifier() + "\"", 1000);
+			for (final RemoteIssue subIssue : subIssues) {
+				userStory.addTask(this.convertToTask(subIssue));
+				userStory.addParticipant(this.participantRepository.findParticipantByUser(subIssue.getAssignee()));
+			}
+		}
+
+		return theReturnList;
+	}
+
+	private UserStoryTask convertToTask(RemoteIssue subIssue) {
+		final UserStoryTask task = new UserStoryTask();
+
+		task.setTitle(subIssue.getSummary());
+		task.setRemoteIdentifier(subIssue.getKey());
+
+		return task;
 	}
 
 	private UserStory convertToUserStory(final RemoteIssue remoteIssue) {
+		final UserStory us = new UserStory();
 
-		return null;
+		us.setRemoteIdentifier(remoteIssue.getKey());
+		us.setTitle(remoteIssue.getSummary().trim());
+		us.setDescription(remoteIssue.getDescription());
+		us.addParticipant(this.participantRepository.findParticipantByUser(remoteIssue.getAssignee()));
+
+		return us;
 	}
 
 	@Override
@@ -114,5 +139,20 @@ public class JiraImporter implements UserStoryImporter {
 		});
 
 		return consideredSprints;
+	}
+
+	@Override
+	public Participant findParticipantByUser(String user) {
+		final RemoteUser remoteUser = this.jiraConnector.getUser(user);
+
+		if (remoteUser != null) {
+			final Participant participant = new Participant();
+
+			participant.setUser(remoteUser.getName());
+
+			return participant;
+		}
+
+		return null;
 	}
 }

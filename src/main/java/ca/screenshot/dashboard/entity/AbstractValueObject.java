@@ -1,12 +1,10 @@
-package ca.screenshot.dashboard;
+package ca.screenshot.dashboard.entity;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
 
 /**
  */
 public abstract class AbstractValueObject implements ValueObject, Serializable {
-	@XmlAttribute(name = "guid", required = true)
 	private String guid;
 
 

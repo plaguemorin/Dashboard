@@ -1,4 +1,4 @@
-package ca.screenshot.dashboard;
+package ca.screenshot.dashboard.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
