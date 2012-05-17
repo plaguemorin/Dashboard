@@ -172,7 +172,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 			participant.setUser(remoteUser.getName());
 			participant.setEmail(remoteUser.getEmail());
 			participant.setDisplayName(remoteUser.getFullname());
-			participant.setGuid(remoteUser.getName());
+			participant.setGuid(remoteUser.getName() + "|JIRA");
 
 			return participant;
 		}
