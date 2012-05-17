@@ -50,15 +50,21 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		for (final RemoteIssue remoteIssue : issuesFromJqlSearch) {
 			LOGGER.info("Got Issue: [" + remoteIssue.getKey() + "] " + remoteIssue.getSummary());
 
-			theReturnList.add(this.convertToUserStory(remoteIssue));
+			theReturnList.add(this.convertToUserStory(remoteIssue, sprint));
 		}
 
 		// Populate Sub-tasks
 		for (final UserStory userStory : theReturnList) {
+			LOGGER.info("Getting tasks for user story " + userStory.getRemoteIdentifier());
+
 			final List<RemoteIssue> subIssues = this.jiraConnector.getIssuesFromJqlSearch("parent =\"" + userStory.getRemoteIdentifier() + "\"", 1000);
 			for (final RemoteIssue subIssue : subIssues) {
+				LOGGER.info("Got task: [" + subIssue.getKey() + "] " + subIssue.getSummary());
+				final Participant participant = this.participantRepository.findParticipantByUser(subIssue.getAssignee());
+
 				userStory.addTask(this.convertToTask(subIssue));
-				userStory.addParticipant(this.participantRepository.findParticipantByUser(subIssue.getAssignee()));
+				userStory.addOrUpdateParticipant(participant);
+				sprint.addOrUpdateParticipant(participant);
 			}
 		}
 
@@ -76,14 +82,17 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		return task;
 	}
 
-	private UserStory convertToUserStory(final RemoteIssue remoteIssue)
+	private UserStory convertToUserStory(final RemoteIssue remoteIssue, Sprint sprint)
 	{
 		final UserStory us = new UserStory();
+		final Participant participant = this.participantRepository.findParticipantByUser(remoteIssue.getAssignee());
+
+		sprint.addOrUpdateParticipant(participant);
 
 		us.setRemoteIdentifier(remoteIssue.getKey());
 		us.setTitle(remoteIssue.getSummary().trim());
 		us.setDescription(remoteIssue.getDescription());
-		us.addParticipant(this.participantRepository.findParticipantByUser(remoteIssue.getAssignee()));
+		us.addOrUpdateParticipant(participant);
 		us.setGuid(remoteIssue.getId());
 
 		return us;
@@ -123,10 +132,10 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		for (final RemoteVersion version : versions) {
 			if (version.getReleaseDate() != null && !version.isReleased() && !version.isArchived()) {
 				if (version.getReleaseDate().after(today)) {
-					LOGGER.debug("Found possible teamName: \"" + version.getName() + "\"");
+					LOGGER.info("Found possible teamName: \"" + version.getName() + "\"");
 					consideredSprints.add(this.convertToSprint(version, teamName));
 				} else {
-					LOGGER.debug("Discarded since release date is in the past: "
+					LOGGER.info("Discarded since release date is in the past: "
 							+ version.getName()
 							+ " (release date was: " + version.getReleaseDate().toString() + ")");
 				}
@@ -167,16 +176,20 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		final RemoteUser remoteUser = this.jiraConnector.getUser(user);
 
 		if (remoteUser != null) {
-			final Participant participant = new Participant();
-
-			participant.setUser(remoteUser.getName());
-			participant.setEmail(remoteUser.getEmail());
-			participant.setDisplayName(remoteUser.getFullname());
-			participant.setGuid(remoteUser.getName() + "|JIRA");
-
-			return participant;
+			return convertToParticipant(remoteUser);
 		}
 
 		return null;
+	}
+
+	private Participant convertToParticipant(RemoteUser remoteUser)
+	{
+		final Participant participant = new Participant();
+
+		participant.setUser(remoteUser.getName());
+		participant.setEmail(remoteUser.getEmail());
+		participant.setDisplayName(remoteUser.getFullname());
+		participant.setGuid(remoteUser.getName() + "|JIRA");
+		return participant;
 	}
 }

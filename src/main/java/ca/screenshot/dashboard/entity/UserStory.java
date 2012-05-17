@@ -1,9 +1,6 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -25,6 +22,7 @@ public class UserStory extends AbstractValueObject
 	private List<UserStoryTask> taskList = new ArrayList<>();
 	private List<Participant> participantList = new ArrayList<>();
 
+	@XmlAttribute
 	public String getRemoteIdentifier()
 	{
 		return remoteIdentifier;
@@ -45,11 +43,6 @@ public class UserStory extends AbstractValueObject
 		this.description = description;
 	}
 
-	public void addParticipant(Participant participant)
-	{
-		this.participantList.add(participant);
-	}
-
 	public void addTask(UserStoryTask userStoryTask)
 	{
 		this.taskList.add(userStoryTask);
@@ -57,6 +50,7 @@ public class UserStory extends AbstractValueObject
 
 	@XmlElementWrapper(name = "participants")
 	@XmlElement(name = "participant")
+	@XmlIDREF
 	public Collection<Participant> getParticipants()
 	{
 		return unmodifiableCollection(this.participantList);

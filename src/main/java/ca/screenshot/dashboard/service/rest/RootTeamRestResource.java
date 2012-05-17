@@ -1,12 +1,14 @@
 package ca.screenshot.dashboard.service.rest;
 
-import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.service.repositories.SprintRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import java.util.List;
+
+import static java.util.Arrays.asList;
 
 /**
  * User: PLMorin
@@ -21,8 +23,8 @@ public class RootTeamRestResource
 	private SprintRepository sprintProvider;
 
 	@GET
-	public Sprint getCurrentSprint()
+	public List<String> getTeamNames()
 	{
-		return this.sprintProvider.getSprintForTeam("CANADIENS");
+		return asList("CANADIENS");
 	}
 }

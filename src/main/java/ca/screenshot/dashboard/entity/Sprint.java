@@ -1,8 +1,7 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -20,6 +19,7 @@ import static java.util.Collections.unmodifiableCollection;
 public class Sprint extends AbstractValueObject
 {
 	private List<UserStory> userStoryList = new ArrayList<>();
+	private List<Participant> participantList = new ArrayList<>();
 	private String sprintName;
 	private String teamName;
 	private Calendar endDate;
@@ -64,10 +64,25 @@ public class Sprint extends AbstractValueObject
 		return endDate;
 	}
 
-	@XmlElementWrapper(name = "userstories")
-	@XmlElement(name = "userstory")
+	@XmlTransient
 	public Collection<UserStory> getUserStories()
 	{
 		return unmodifiableCollection(this.userStoryList);
+	}
+
+	@XmlTransient
+	public Collection<Participant> getParticipants()
+	{
+		return unmodifiableCollection(this.participantList);
+	}
+
+	public void addOrUpdateParticipant(Participant p)
+	{
+		if (participantList.contains(p)) {
+			final Participant oldParticipant = participantList.get(participantList.indexOf(p));
+			oldParticipant.updateWith(p);
+		} else {
+			participantList.add(p);
+		}
 	}
 }
