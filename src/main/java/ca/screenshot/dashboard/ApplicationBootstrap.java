@@ -1,6 +1,5 @@
 package ca.screenshot.dashboard;
 
-import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.service.providers.SprintProvider;
 import ca.screenshot.dashboard.service.providers.UserStoryProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,8 @@ import javax.annotation.PostConstruct;
  *         Time: 7:22 PM
  */
 @Component
-public class ApplicationBootstrap {
+public class ApplicationBootstrap
+{
 	@Autowired
 	private UserStoryProvider userStoryProvider;
 
@@ -22,11 +22,8 @@ public class ApplicationBootstrap {
 	private SprintProvider sprintProvider;
 
 	@PostConstruct
-	public void init() {
-		final Sprint thisSprint = new Sprint();
-		thisSprint.setTeamName("CANADIENS");
+	public void init()
+	{
 
-		sprintProvider.findLatestSprint(thisSprint);
-		userStoryProvider.getUserStoriesForSprint(thisSprint);
 	}
 }

@@ -27,7 +27,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  *         Time: 5:39 PM
  */
 @Service
-public class JiraProvider implements UserStoryProvider, ParticipantProvider, SprintProvider {
+public class JiraProvider implements UserStoryProvider, ParticipantProvider, SprintProvider
+{
 	private static final Logger LOGGER = LoggerFactory.getLogger(JiraProvider.class);
 
 	@Autowired
@@ -37,7 +38,8 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 	private ParticipantRepository participantRepository;
 
 	@Override
-	public List<UserStory> getUserStoriesForSprint(final Sprint sprint) {
+	public List<UserStory> getUserStoriesForSprint(final Sprint sprint)
+	{
 		if (isEmpty(sprint.getSprintName())) {
 			throw new IllegalArgumentException("Sprint name cannot be empty when using the JIRA Importer");
 		}
@@ -63,34 +65,37 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		return theReturnList;
 	}
 
-	private UserStoryTask convertToTask(RemoteIssue subIssue) {
+	private UserStoryTask convertToTask(RemoteIssue subIssue)
+	{
 		final UserStoryTask task = new UserStoryTask();
 
+		task.setGuid(subIssue.getId());
 		task.setTitle(subIssue.getSummary());
 		task.setRemoteIdentifier(subIssue.getKey());
 
 		return task;
 	}
 
-	private UserStory convertToUserStory(final RemoteIssue remoteIssue) {
+	private UserStory convertToUserStory(final RemoteIssue remoteIssue)
+	{
 		final UserStory us = new UserStory();
 
 		us.setRemoteIdentifier(remoteIssue.getKey());
 		us.setTitle(remoteIssue.getSummary().trim());
 		us.setDescription(remoteIssue.getDescription());
 		us.addParticipant(this.participantRepository.findParticipantByUser(remoteIssue.getAssignee()));
+		us.setGuid(remoteIssue.getId());
 
 		return us;
 	}
 
 	@Override
-	public void findLatestSprint(final Sprint sprint) {
-		final List<RemoteVersion> consideredSprints = findPossibleSprints(sprint);
+	public Sprint findLatestSprint(final String teamName)
+	{
+		final List<Sprint> consideredSprints = findPossibleSprints(teamName);
 
 		if (!consideredSprints.isEmpty()) {
-			final RemoteVersion version = consideredSprints.get(0);
-			sprint.setSprintName(version.getName());
-			return;
+			return consideredSprints.get(0);
 		}
 
 		throw new IllegalStateException("No active sprint found !");
@@ -99,25 +104,27 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 	/**
 	 * Find versions that can be valid sprints
 	 *
-	 * @param sprint the current sprint
+	 * @param teamName the current teamName
 	 * @return ordered list of possible sprints active sprints from oldest to newest
 	 */
-	private List<RemoteVersion> findPossibleSprints(Sprint sprint) {
-		if (isEmpty(sprint.getTeamName())) {
+	@Override
+	public List<Sprint> findPossibleSprints(String teamName)
+	{
+		if (isEmpty(teamName)) {
 			throw new IllegalArgumentException("Sprint team name cannot be empty when using the JIRA Importer");
 		}
 
 		final Calendar today = new GregorianCalendar();
 		today.setTime(new Date());
 
-		final List<RemoteVersion> versions = this.jiraConnector.getVersions(sprint.getTeamName());
-		final List<RemoteVersion> consideredSprints = new ArrayList<>();
+		final List<RemoteVersion> versions = this.jiraConnector.getVersions(teamName);
+		final List<Sprint> consideredSprints = new ArrayList<>();
 
 		for (final RemoteVersion version : versions) {
 			if (version.getReleaseDate() != null && !version.isReleased() && !version.isArchived()) {
 				if (version.getReleaseDate().after(today)) {
-					LOGGER.debug("Found possible sprint: \"" + version.getName() + "\"");
-					consideredSprints.add(version);
+					LOGGER.debug("Found possible teamName: \"" + version.getName() + "\"");
+					consideredSprints.add(this.convertToSprint(version, teamName));
 				} else {
 					LOGGER.debug("Discarded since release date is in the past: "
 							+ version.getName()
@@ -126,11 +133,13 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 			}
 		}
 
-		sort(consideredSprints, new Comparator<RemoteVersion>() {
+		sort(consideredSprints, new Comparator<Sprint>()
+		{
 			@Override
-			public int compare(final RemoteVersion o1, final RemoteVersion o2) {
-				final Calendar xcal = o1.getReleaseDate();
-				final Calendar ycal = o2.getReleaseDate();
+			public int compare(final Sprint o1, final Sprint o2)
+			{
+				final Calendar xcal = o1.getEndDate();
+				final Calendar ycal = o2.getEndDate();
 
 				if (xcal.before(ycal)) return -1;
 				if (xcal.after(ycal)) return 1;
@@ -141,14 +150,29 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		return consideredSprints;
 	}
 
+	private Sprint convertToSprint(RemoteVersion version, String teamName)
+	{
+		final Sprint sprint = new Sprint();
+		sprint.setSprintName(version.getName());
+		sprint.setTeamName(teamName);
+		sprint.setEndDate(version.getReleaseDate());
+		sprint.setGuid(version.getId());
+
+		return sprint;
+	}
+
 	@Override
-	public Participant findParticipantByUser(String user) {
+	public Participant findParticipantByUser(String user)
+	{
 		final RemoteUser remoteUser = this.jiraConnector.getUser(user);
 
 		if (remoteUser != null) {
 			final Participant participant = new Participant();
 
 			participant.setUser(remoteUser.getName());
+			participant.setEmail(remoteUser.getEmail());
+			participant.setDisplayName(remoteUser.getFullname());
+			participant.setGuid(remoteUser.getName());
 
 			return participant;
 		}
