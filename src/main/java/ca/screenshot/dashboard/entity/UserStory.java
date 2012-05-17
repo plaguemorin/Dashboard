@@ -1,6 +1,9 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -12,8 +15,7 @@ import static java.util.Collections.unmodifiableCollection;
  */
 @XmlRootElement
 @XmlType(name = "UserStory")
-public class UserStory extends AbstractValueObject
-{
+public class UserStory extends AbstractValueObject {
 	private UserStoryStatus storyStatus;
 	private String remoteIdentifier;
 	private String title;
@@ -23,48 +25,37 @@ public class UserStory extends AbstractValueObject
 	private List<Participant> participantList = new ArrayList<>();
 
 	@XmlAttribute
-	public String getRemoteIdentifier()
-	{
+	public String getRemoteIdentifier() {
 		return remoteIdentifier;
 	}
 
-	public void setRemoteIdentifier(String remoteIdentifier)
-	{
+	public void setRemoteIdentifier(String remoteIdentifier) {
 		this.remoteIdentifier = remoteIdentifier;
 	}
 
-	public void setTitle(String title)
-	{
+	public void setTitle(String title) {
 		this.title = title;
 	}
 
-	public void setDescription(String description)
-	{
+	public void setDescription(String description) {
 		this.description = description;
 	}
 
-	public void addTask(UserStoryTask userStoryTask)
-	{
+	public void addTask(UserStoryTask userStoryTask) {
 		this.taskList.add(userStoryTask);
 	}
 
-	@XmlElementWrapper(name = "participants")
-	@XmlElement(name = "participant")
-	@XmlIDREF
-	public Collection<Participant> getParticipants()
-	{
+	@XmlTransient
+	public Collection<Participant> getParticipants() {
 		return unmodifiableCollection(this.participantList);
 	}
 
-	@XmlElementWrapper(name = "tasks")
-	@XmlElement(name = "task")
-	public Collection<UserStoryTask> getTasks()
-	{
+	@XmlTransient
+	public Collection<UserStoryTask> getTasks() {
 		return unmodifiableCollection(this.taskList);
 	}
 
-	private void addOrUpdateTask(final UserStoryTask storyTask)
-	{
+	private void addOrUpdateTask(final UserStoryTask storyTask) {
 		if (this.taskList.contains(storyTask)) {
 			final UserStoryTask oldStoryTask = this.taskList.get(this.taskList.indexOf(storyTask));
 			oldStoryTask.updateWith(storyTask);
@@ -73,8 +64,7 @@ public class UserStory extends AbstractValueObject
 		}
 	}
 
-	public void addOrUpdateParticipant(final Participant participant)
-	{
+	public void addOrUpdateParticipant(final Participant participant) {
 		if (this.participantList.contains(participant)) {
 			final Participant oldParticipant = this.participantList.get(this.participantList.indexOf(participant));
 			oldParticipant.updateWith(participant);
@@ -83,18 +73,15 @@ public class UserStory extends AbstractValueObject
 		}
 	}
 
-	public String getTitle()
-	{
+	public String getTitle() {
 		return title;
 	}
 
-	public String getDescription()
-	{
+	public String getDescription() {
 		return description;
 	}
 
-	public void updateWith(UserStory userStory)
-	{
+	public void updateWith(UserStory userStory) {
 		this.description = userStory.description;
 		this.remoteIdentifier = userStory.remoteIdentifier;
 		this.title = userStory.title;

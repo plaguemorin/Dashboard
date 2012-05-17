@@ -27,8 +27,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  *         Time: 5:39 PM
  */
 @Service
-public class JiraProvider implements UserStoryProvider, ParticipantProvider, SprintProvider
-{
+public class JiraProvider implements UserStoryProvider, ParticipantProvider, SprintProvider {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JiraProvider.class);
 
 	@Autowired
@@ -38,8 +37,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 	private ParticipantRepository participantRepository;
 
 	@Override
-	public List<UserStory> getUserStoriesForSprint(final Sprint sprint)
-	{
+	public List<UserStory> getUserStoriesForSprint(final Sprint sprint) {
 		if (isEmpty(sprint.getSprintName())) {
 			throw new IllegalArgumentException("Sprint name cannot be empty when using the JIRA Importer");
 		}
@@ -71,8 +69,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		return theReturnList;
 	}
 
-	private UserStoryTask convertToTask(RemoteIssue subIssue)
-	{
+	private UserStoryTask convertToTask(RemoteIssue subIssue) {
 		final UserStoryTask task = new UserStoryTask();
 
 		task.setGuid(subIssue.getId());
@@ -82,8 +79,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		return task;
 	}
 
-	private UserStory convertToUserStory(final RemoteIssue remoteIssue, Sprint sprint)
-	{
+	private UserStory convertToUserStory(final RemoteIssue remoteIssue, Sprint sprint) {
 		final UserStory us = new UserStory();
 		final Participant participant = this.participantRepository.findParticipantByUser(remoteIssue.getAssignee());
 
@@ -99,8 +95,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 	}
 
 	@Override
-	public Sprint findLatestSprint(final String teamName)
-	{
+	public Sprint findLatestSprint(final String teamName) {
 		final List<Sprint> consideredSprints = findPossibleSprints(teamName);
 
 		if (!consideredSprints.isEmpty()) {
@@ -117,8 +112,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 	 * @return ordered list of possible sprints active sprints from oldest to newest
 	 */
 	@Override
-	public List<Sprint> findPossibleSprints(String teamName)
-	{
+	public List<Sprint> findPossibleSprints(String teamName) {
 		if (isEmpty(teamName)) {
 			throw new IllegalArgumentException("Sprint team name cannot be empty when using the JIRA Importer");
 		}
@@ -142,11 +136,9 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 			}
 		}
 
-		sort(consideredSprints, new Comparator<Sprint>()
-		{
+		sort(consideredSprints, new Comparator<Sprint>() {
 			@Override
-			public int compare(final Sprint o1, final Sprint o2)
-			{
+			public int compare(final Sprint o1, final Sprint o2) {
 				final Calendar xcal = o1.getEndDate();
 				final Calendar ycal = o2.getEndDate();
 
@@ -159,8 +151,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		return consideredSprints;
 	}
 
-	private Sprint convertToSprint(RemoteVersion version, String teamName)
-	{
+	private Sprint convertToSprint(RemoteVersion version, String teamName) {
 		final Sprint sprint = new Sprint();
 		sprint.setSprintName(version.getName());
 		sprint.setTeamName(teamName);
@@ -171,8 +162,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 	}
 
 	@Override
-	public Participant findParticipantByUser(String user)
-	{
+	public Participant findParticipantByUser(String user) {
 		final RemoteUser remoteUser = this.jiraConnector.getUser(user);
 
 		if (remoteUser != null) {
@@ -182,10 +172,8 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		return null;
 	}
 
-	private Participant convertToParticipant(RemoteUser remoteUser)
-	{
+	private Participant convertToParticipant(RemoteUser remoteUser) {
 		final Participant participant = new Participant();
-
 		participant.setUser(remoteUser.getName());
 		participant.setEmail(remoteUser.getEmail());
 		participant.setDisplayName(remoteUser.getFullname());
