@@ -1,6 +1,7 @@
 package ca.screenshot.dashboard.entity;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -9,45 +10,38 @@ import javax.xml.bind.annotation.XmlRootElement;
  *         Time: 7:04 PM
  */
 @XmlRootElement
-public class Participant extends AbstractValueObject
-{
+public class Participant extends AbstractValueObject {
 	private String user;
 	private String email;
 	private String displayName;
 
 	@XmlAttribute(name = "user")
-	public String getUser()
-	{
+	@XmlID
+	public String getUser() {
 		return user;
 	}
 
-	public void setUser(String user)
-	{
+	public void setUser(String user) {
 		this.user = user;
 	}
 
-	public void updateWith(Participant participant)
-	{
+	public void updateWith(Participant participant) {
 		this.user = participant.user;
 	}
 
-	public void setEmail(String email)
-	{
+	public void setEmail(String email) {
 		this.email = email;
 	}
 
-	public String getEmail()
-	{
+	public String getEmail() {
 		return email;
 	}
 
-	public void setDisplayName(String displayName)
-	{
+	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
 
-	public String getDisplayName()
-	{
+	public String getDisplayName() {
 		return displayName;
 	}
 }

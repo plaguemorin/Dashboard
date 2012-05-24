@@ -322,6 +322,11 @@
 			<version>${camel-core.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.tmatesoft.hg4j</groupId>
+			<artifactId>hg4j</artifactId>
+			<version>0.7.0</version>
+		</dependency>
 	</dependencies>
 
 </project>
