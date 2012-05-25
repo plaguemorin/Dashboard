@@ -16,7 +16,7 @@ import static java.util.Collections.unmodifiableCollection;
  *         Time: 6:14 PM
  */
 @XmlRootElement
-public class Sprint extends AbstractValueObject {
+public class Sprint extends AbstractLoggedValueObject {
 	private List<UserStory> userStoryList = new ArrayList<>();
 	private List<Participant> participantList = new ArrayList<>();
 	private String sprintName;
