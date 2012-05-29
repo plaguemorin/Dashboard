@@ -1,5 +1,9 @@
 package ca.screenshot.dashboard.entity;
 
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
@@ -16,12 +20,23 @@ import static java.util.Collections.unmodifiableCollection;
  *         Time: 6:14 PM
  */
 @XmlRootElement
-public class Sprint extends AbstractLoggedValueObject {
+@Entity
+public class Sprint extends AbstractSourcedGeneratedLoggedObject {
+	@OneToMany
 	private List<UserStory> userStoryList = new ArrayList<>();
+
+	@OneToMany
 	private List<Participant> participantList = new ArrayList<>();
+
+	@Temporal(TemporalType.TIMESTAMP)
+	private Calendar endDate;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	private Calendar startDate;
+
 	private String sprintName;
 	private String teamName;
-	private Calendar endDate;
+
 
 	public String getSprintName() {
 		return sprintName;
@@ -36,10 +51,10 @@ public class Sprint extends AbstractLoggedValueObject {
 	}
 
 	public String getTeamName() {
-		return teamName;
+		return this.teamName;
 	}
 
-	public void updateOrCreate(final UserStory userStory) {
+	public void updateWith(final UserStory userStory) {
 		if (userStoryList.contains(userStory)) {
 			final UserStory oldUserStory = userStoryList.get(userStoryList.indexOf(userStory));
 			oldUserStory.updateWith(userStory);
@@ -83,5 +98,13 @@ public class Sprint extends AbstractLoggedValueObject {
 		}
 
 		return null;
+	}
+
+	public Calendar getStartDate() {
+		return startDate;
+	}
+
+	public void setStartDate(Calendar startDate) {
+		this.startDate = startDate;
 	}
 }

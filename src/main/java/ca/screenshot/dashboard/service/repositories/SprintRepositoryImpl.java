@@ -70,7 +70,7 @@ public class SprintRepositoryImpl implements SprintRepository {
 			final List<UserStory> userStoriesForSprint = storyProvider.getUserStoriesForSprint(latestSprint);
 
 			for (final UserStory userStory : userStoriesForSprint) {
-				latestSprint.updateOrCreate(userStory);
+				latestSprint.updateWith(userStory);
 			}
 		}
 	}

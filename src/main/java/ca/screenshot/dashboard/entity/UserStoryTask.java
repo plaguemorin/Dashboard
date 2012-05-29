@@ -1,5 +1,6 @@
 package ca.screenshot.dashboard.entity;
 
+import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -8,35 +9,32 @@ import javax.xml.bind.annotation.XmlRootElement;
  *         Time: 7:27 PM
  */
 @XmlRootElement
-public class UserStoryTask extends AbstractValueObject
-{
-	private String title;
-	private String remoteIdentifier;
+@Entity
+public class UserStoryTask extends AbstractSourcedGeneratedLoggedObject {
 
-	public void setTitle(String title)
-	{
+	private String title;
+	private Long minutesEstimated;
+
+	public void setTitle(String title) {
 		this.title = title;
 	}
 
-	public void setRemoteIdentifier(String remoteIdentifier)
-	{
-		this.remoteIdentifier = remoteIdentifier;
-	}
-
-	public String getTitle()
-	{
+	public String getTitle() {
 		return this.title;
 	}
 
-	public String getRemoteIdentifier()
-	{
-		return this.remoteIdentifier;
-	}
+	public void updateWith(final UserStoryTask storyTask) {
+		super.updateWith(storyTask);
+		super.updateGenerators(storyTask);
 
-	public void updateWith(final UserStoryTask storyTask)
-	{
-		this.remoteIdentifier = storyTask.remoteIdentifier;
 		this.title = storyTask.title;
 	}
 
+	public Long getMinutesEstimated() {
+		return minutesEstimated;
+	}
+
+	public void setMinutesEstimated(Long minutesEstimated) {
+		this.minutesEstimated = minutesEstimated;
+	}
 }

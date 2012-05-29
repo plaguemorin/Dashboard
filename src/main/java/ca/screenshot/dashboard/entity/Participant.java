@@ -1,5 +1,7 @@
 package ca.screenshot.dashboard.entity;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -10,9 +12,13 @@ import javax.xml.bind.annotation.XmlRootElement;
  *         Time: 7:04 PM
  */
 @XmlRootElement
-public class Participant extends AbstractValueObject {
+@Entity
+public class Participant extends AbstractSourcedGeneratedObject {
+	@Id
 	private String user;
+
 	private String email;
+
 	private String displayName;
 
 	@XmlAttribute(name = "user")

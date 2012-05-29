@@ -4,6 +4,7 @@ import ca.screenshot.dashboard.entity.Participant;
 import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.entity.UserStory;
 import ca.screenshot.dashboard.entity.UserStoryTask;
+import ca.screenshot.dashboard.external.jira.RemoteCustomFieldValue;
 import ca.screenshot.dashboard.external.jira.RemoteIssue;
 import ca.screenshot.dashboard.external.jira.RemoteUser;
 import ca.screenshot.dashboard.external.jira.RemoteVersion;
@@ -11,6 +12,7 @@ import ca.screenshot.dashboard.service.providers.ParticipantProvider;
 import ca.screenshot.dashboard.service.providers.SprintProvider;
 import ca.screenshot.dashboard.service.providers.UserStoryProvider;
 import ca.screenshot.dashboard.service.repositories.ParticipantRepository;
+import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,9 +55,9 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 
 		// Populate Sub-tasks
 		for (final UserStory userStory : theReturnList) {
-			LOGGER.info("Getting tasks for user story " + userStory.getRemoteIdentifier());
+			LOGGER.info("Getting tasks for user story " + userStory.getRemoteIdentifier("JIRA"));
 
-			final List<RemoteIssue> subIssues = this.jiraConnector.getIssuesFromJqlSearch("parent =\"" + userStory.getRemoteIdentifier() + "\"", 1000);
+			final List<RemoteIssue> subIssues = this.jiraConnector.getIssuesFromJqlSearch("parent =\"" + userStory.getRemoteIdentifier("JIRA") + "\"", 1000);
 			for (final RemoteIssue subIssue : subIssues) {
 				LOGGER.info("Got task: [" + subIssue.getKey() + "] " + subIssue.getSummary());
 				final Participant participant = this.participantRepository.findParticipantByUser(subIssue.getAssignee());
@@ -74,9 +76,20 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 
 		task.setGuid(subIssue.getId());
 		task.setTitle(subIssue.getSummary());
-		task.setRemoteIdentifier(subIssue.getKey());
+		task.setRemoteIdentifier("JIRA", subIssue.getKey());
+		task.setMinutesEstimated(this.extractEstimatedHours(subIssue.getCustomFieldValues()) * 60);
 
 		return task;
+	}
+
+	private Long extractEstimatedHours(RemoteCustomFieldValue[] customFieldValues) {
+		for (final RemoteCustomFieldValue customFieldValue : customFieldValues) {
+			LOGGER.info("Custom Field Key [" + customFieldValue.getKey() +
+					"], Id [" + customFieldValue.getCustomfieldId() +
+					"], Value [" + ArrayUtils.toString(customFieldValue.getValues()) + "]");
+		}
+
+		return 0L;
 	}
 
 	private UserStory convertToUserStory(final RemoteIssue remoteIssue, Sprint sprint) {
@@ -85,11 +98,10 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 
 		sprint.addOrUpdateParticipant(participant);
 
-		us.setRemoteIdentifier(remoteIssue.getKey());
+		us.setRemoteIdentifier("JIRA", remoteIssue.getKey());
 		us.setTitle(remoteIssue.getSummary().trim());
 		us.setDescription(remoteIssue.getDescription());
 		us.addOrUpdateParticipant(participant);
-		us.setGuid(remoteIssue.getId());
 
 		return us;
 	}
@@ -153,10 +165,11 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 
 	private Sprint convertToSprint(RemoteVersion version, String teamName) {
 		final Sprint sprint = new Sprint();
+
 		sprint.setSprintName(version.getName());
 		sprint.setTeamName(teamName);
 		sprint.setEndDate(version.getReleaseDate());
-		sprint.setGuid(version.getId());
+		sprint.setRemoteIdentifier("JIRA", version.getName());
 
 		return sprint;
 	}
@@ -174,10 +187,12 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 
 	private Participant convertToParticipant(RemoteUser remoteUser) {
 		final Participant participant = new Participant();
+
+		participant.setRemoteIdentifier("JIRA", remoteUser.getName());
 		participant.setUser(remoteUser.getName());
 		participant.setEmail(remoteUser.getEmail());
 		participant.setDisplayName(remoteUser.getFullname());
-		participant.setGuid(remoteUser.getName() + "|JIRA");
+
 		return participant;
 	}
 }

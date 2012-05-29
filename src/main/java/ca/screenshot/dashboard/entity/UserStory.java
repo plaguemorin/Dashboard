@@ -1,6 +1,9 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.OneToMany;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
@@ -15,23 +18,19 @@ import static java.util.Collections.unmodifiableCollection;
  */
 @XmlRootElement
 @XmlType(name = "UserStory")
-public class UserStory extends AbstractValueObject {
+@Entity
+public class UserStory extends AbstractSourcedGeneratedObject {
+	@Enumerated(EnumType.STRING)
 	private UserStoryStatus storyStatus;
-	private String remoteIdentifier;
+
 	private String title;
 	private String description;
 
+	@OneToMany
 	private List<UserStoryTask> taskList = new ArrayList<>();
+
+	@OneToMany
 	private List<Participant> participantList = new ArrayList<>();
-
-	@XmlAttribute
-	public String getRemoteIdentifier() {
-		return remoteIdentifier;
-	}
-
-	public void setRemoteIdentifier(String remoteIdentifier) {
-		this.remoteIdentifier = remoteIdentifier;
-	}
 
 	public void setTitle(String title) {
 		this.title = title;
@@ -82,8 +81,9 @@ public class UserStory extends AbstractValueObject {
 	}
 
 	public void updateWith(UserStory userStory) {
+		super.updateWith(userStory);
+
 		this.description = userStory.description;
-		this.remoteIdentifier = userStory.remoteIdentifier;
 		this.title = userStory.title;
 		this.storyStatus = userStory.storyStatus;
 

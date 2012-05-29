@@ -14,6 +14,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static org.drools.core.util.StringUtils.isEmpty;
 
 /**
  * @author plaguemorin
@@ -100,12 +101,16 @@ public class JiraConnector {
 	}
 
 	public RemoteUser getUser(String user) {
-		this.setupConnection();
-		try {
-			return this.jiraSoapService.getUser(this.authKey, user);
-		} catch (RemoteException e) {
-			LOGGER.error("Unable to execute remote getUser on server \"" + this.jiraUrl + "\"", e);
-			throw new IllegalStateException("Remote exception caught", e);
+		if (!isEmpty(user)) {
+			this.setupConnection();
+			try {
+				return this.jiraSoapService.getUser(this.authKey, user);
+			} catch (RemoteException e) {
+				LOGGER.error("Unable to execute remote getUser on server \"" + this.jiraUrl + "\"", e);
+				throw new IllegalStateException("Remote exception caught", e);
+			}
+		} else {
+			throw new IllegalArgumentException("User must not be null !");
 		}
 	}
 }

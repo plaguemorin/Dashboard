@@ -1,5 +1,6 @@
 package ca.screenshot.dashboard.entity;
 
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -12,9 +13,14 @@ import java.util.Date;
  *         Time: 12:48 PM
  */
 @XmlRootElement
+@Entity
 public class ActivityLog extends AbstractValueObject {
+	@OneToOne
 	private Participant who;
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "SNAP_DATE")
 	private Date when;
+
 	private String what;
 
 	@XmlIDREF
@@ -42,5 +48,13 @@ public class ActivityLog extends AbstractValueObject {
 
 	public void setWhat(String what) {
 		this.what = what;
+	}
+
+	public void updateWith(final ActivityLog activityLog) {
+		super.updateWith(activityLog);
+
+		this.what = activityLog.what;
+		this.who = activityLog.who;
+		this.when = activityLog.when;
 	}
 }
