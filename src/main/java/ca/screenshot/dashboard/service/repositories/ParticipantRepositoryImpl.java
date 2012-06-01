@@ -1,13 +1,18 @@
 package ca.screenshot.dashboard.service.repositories;
 
 import ca.screenshot.dashboard.entity.Participant;
-import ca.screenshot.dashboard.service.providers.ParticipantProvider;
+import ca.screenshot.dashboard.service.providers.ParticipantAugmenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedList;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.util.List;
 
 /**
@@ -19,39 +24,34 @@ import java.util.List;
 public class ParticipantRepositoryImpl implements ParticipantRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ParticipantRepositoryImpl.class);
 
-
 	@Autowired
-	private List<ParticipantProvider> participantProviderList;
+	private List<ParticipantAugmenter> participantAugmenterList;
 
-	private List<Participant> participantCache = new LinkedList<>();
+	@PersistenceContext
+	private EntityManager entityManager;
+
 
 	@Override
-	public Participant findParticipantByUser(String participant) {
-		for (final Participant p : this.participantCache) {
-			if (participant.equals(p.getUser())) {
-				return p;
-			}
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public Participant findParticipantByUser(final String participant) {
+		final Query query = entityManager.createNamedQuery("Participant.findByUser");
+		query.setParameter("user", participant.toLowerCase());
+
+		try {
+			return (Participant) query.getSingleResult();
+		} catch (final NoResultException ignored) {
+			LOGGER.debug("User \"" + participant + "\" was not found in DB");
 		}
 
-		LOGGER.debug("User \"" + participant + "\" was not found in cache");
+		final Participant user = new Participant();
+		user.setUser(participant.toLowerCase());
 
-		for (final ParticipantProvider participantProvider : this.participantProviderList) {
-			final Participant user = participantProvider.findParticipantByUser(participant);
-			if (user != null) {
-				this.participantCache.add(user);
-
-				LOGGER.info("User \"" + participant + "\" was added in cache by provider: " + participantProvider.getClass().getName());
-				return user;
-			}
+		for (final ParticipantAugmenter participantAugmenter : this.participantAugmenterList) {
+			participantAugmenter.augmentParticipant(user);
 		}
 
-		LOGGER.warn("No provider was able to find a participant with user \"" + participant + "\"");
+		entityManager.persist(user);
 
-		// TODO: Refactor into a dummy provider
-		final Participant p = new Participant();
-		p.setUser(participant);
-		this.participantCache.add(p);
-
-		return p;
+		return user;
 	}
 }

@@ -8,17 +8,20 @@ import ca.screenshot.dashboard.external.jira.RemoteCustomFieldValue;
 import ca.screenshot.dashboard.external.jira.RemoteIssue;
 import ca.screenshot.dashboard.external.jira.RemoteUser;
 import ca.screenshot.dashboard.external.jira.RemoteVersion;
-import ca.screenshot.dashboard.service.providers.ParticipantProvider;
+import ca.screenshot.dashboard.service.providers.ParticipantAugmenter;
 import ca.screenshot.dashboard.service.providers.SprintProvider;
 import ca.screenshot.dashboard.service.providers.UserStoryProvider;
 import ca.screenshot.dashboard.service.repositories.ParticipantRepository;
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Comparator;
+import java.util.List;
 
 import static java.util.Collections.sort;
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -29,7 +32,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  *         Time: 5:39 PM
  */
 @Service
-public class JiraProvider implements UserStoryProvider, ParticipantProvider, SprintProvider {
+public class JiraProvider implements UserStoryProvider, ParticipantAugmenter, SprintProvider {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JiraProvider.class);
 
 	@Autowired
@@ -38,55 +41,52 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 	@Autowired
 	private ParticipantRepository participantRepository;
 
+	@Value("${jiraImporter.customFields.storyPoints}")
+	private String customFieldIdStoryPoints;
+
+	@Value("${jiraImporter.customFields.estimatedSeconds}")
+	private String customFieldIdEstimatedSeconds;
+
 	@Override
-	public List<UserStory> getUserStoriesForSprint(final Sprint sprint) {
-		if (isEmpty(sprint.getSprintName())) {
-			throw new IllegalArgumentException("Sprint name cannot be empty when using the JIRA Importer");
-		}
+	public void augmentUserStory(UserStory userStory) {
+		LOGGER.info("Getting tasks for user story " + userStory.getRemoteIdentifier("JIRA"));
 
-		final List<UserStory> theReturnList = new ArrayList<>();
-		final List<RemoteIssue> issuesFromJqlSearch = this.jiraConnector.getIssuesFromJqlSearch("type =\"User story\" and fixVersion =\"" + sprint.getSprintName() + "\"", 1000);
+		final List<RemoteIssue> subIssues = this.jiraConnector.getIssuesFromJqlSearch("parent =\"" + userStory.getRemoteIdentifier("JIRA") + "\"", 1000);
+		for (final RemoteIssue subIssue : subIssues) {
+			LOGGER.info("Got task: [" + subIssue.getKey() + "] " + subIssue.getSummary());
+			userStory.addTask(this.convertToTask(subIssue));
 
-		for (final RemoteIssue remoteIssue : issuesFromJqlSearch) {
-			LOGGER.info("Got Issue: [" + remoteIssue.getKey() + "] " + remoteIssue.getSummary());
-
-			theReturnList.add(this.convertToUserStory(remoteIssue, sprint));
-		}
-
-		// Populate Sub-tasks
-		for (final UserStory userStory : theReturnList) {
-			LOGGER.info("Getting tasks for user story " + userStory.getRemoteIdentifier("JIRA"));
-
-			final List<RemoteIssue> subIssues = this.jiraConnector.getIssuesFromJqlSearch("parent =\"" + userStory.getRemoteIdentifier("JIRA") + "\"", 1000);
-			for (final RemoteIssue subIssue : subIssues) {
-				LOGGER.info("Got task: [" + subIssue.getKey() + "] " + subIssue.getSummary());
-				final Participant participant = this.participantRepository.findParticipantByUser(subIssue.getAssignee());
-
-				userStory.addTask(this.convertToTask(subIssue));
-				userStory.addOrUpdateParticipant(participant);
-				sprint.addOrUpdateParticipant(participant);
+			if (subIssue.getAssignee() != null) {
+				userStory.addOrUpdateParticipant(this.participantRepository.findParticipantByUser(subIssue.getAssignee()));
 			}
 		}
-
-		return theReturnList;
 	}
 
 	private UserStoryTask convertToTask(RemoteIssue subIssue) {
 		final UserStoryTask task = new UserStoryTask();
 
-		task.setGuid(subIssue.getId());
 		task.setTitle(subIssue.getSummary());
 		task.setRemoteIdentifier("JIRA", subIssue.getKey());
-		task.setMinutesEstimated(this.extractEstimatedHours(subIssue.getCustomFieldValues()) * 60);
+		task.setSecondsEstimated(this.extractEstimatedSeconds(subIssue.getCustomFieldValues()) * 60);
 
 		return task;
 	}
 
-	private Long extractEstimatedHours(RemoteCustomFieldValue[] customFieldValues) {
+	private Long extractEstimatedSeconds(RemoteCustomFieldValue[] customFieldValues) {
 		for (final RemoteCustomFieldValue customFieldValue : customFieldValues) {
-			LOGGER.info("Custom Field Key [" + customFieldValue.getKey() +
-					"], Id [" + customFieldValue.getCustomfieldId() +
-					"], Value [" + ArrayUtils.toString(customFieldValue.getValues()) + "]");
+			if (customFieldIdEstimatedSeconds.equals(customFieldValue.getCustomfieldId())) {
+				return Long.valueOf(customFieldValue.getValues()[0]);
+			}
+		}
+
+		return 0L;
+	}
+
+	private Long extractStoryPoints(RemoteCustomFieldValue[] customFieldValues) {
+		for (final RemoteCustomFieldValue customFieldValue : customFieldValues) {
+			if (customFieldIdStoryPoints.equals(customFieldValue.getCustomfieldId())) {
+				return Long.valueOf(customFieldValue.getValues()[0]);
+			}
 		}
 
 		return 0L;
@@ -94,14 +94,17 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 
 	private UserStory convertToUserStory(final RemoteIssue remoteIssue, Sprint sprint) {
 		final UserStory us = new UserStory();
-		final Participant participant = this.participantRepository.findParticipantByUser(remoteIssue.getAssignee());
 
-		sprint.addOrUpdateParticipant(participant);
+		if (remoteIssue.getAssignee() != null) {
+			final Participant participant = this.participantRepository.findParticipantByUser(remoteIssue.getAssignee());
+			sprint.addOrUpdateParticipant(participant);
+			us.addOrUpdateParticipant(participant);
+		}
 
 		us.setRemoteIdentifier("JIRA", remoteIssue.getKey());
 		us.setTitle(remoteIssue.getSummary().trim());
 		us.setDescription(remoteIssue.getDescription());
-		us.addOrUpdateParticipant(participant);
+		us.setStoryPoints(this.extractStoryPoints(remoteIssue.getCustomFieldValues()));
 
 		return us;
 	}
@@ -129,22 +132,19 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 			throw new IllegalArgumentException("Sprint team name cannot be empty when using the JIRA Importer");
 		}
 
-		final Calendar today = new GregorianCalendar();
-		today.setTime(new Date());
-
 		final List<RemoteVersion> versions = this.jiraConnector.getVersions(teamName);
 		final List<Sprint> consideredSprints = new ArrayList<>();
 
 		for (final RemoteVersion version : versions) {
 			if (version.getReleaseDate() != null && !version.isReleased() && !version.isArchived()) {
-				if (version.getReleaseDate().after(today)) {
-					LOGGER.info("Found possible teamName: \"" + version.getName() + "\"");
-					consideredSprints.add(this.convertToSprint(version, teamName));
-				} else {
-					LOGGER.info("Discarded since release date is in the past: "
-							+ version.getName()
-							+ " (release date was: " + version.getReleaseDate().toString() + ")");
-				}
+				final Sprint sprint = new Sprint();
+
+				sprint.setSprintName(version.getName());
+				sprint.setTeamName(teamName);
+				sprint.setEndDate(version.getReleaseDate());
+				sprint.setRemoteIdentifier("JIRA", version.getName());
+
+				consideredSprints.add(sprint);
 			}
 		}
 
@@ -163,36 +163,40 @@ public class JiraProvider implements UserStoryProvider, ParticipantProvider, Spr
 		return consideredSprints;
 	}
 
-	private Sprint convertToSprint(RemoteVersion version, String teamName) {
-		final Sprint sprint = new Sprint();
+	@Override
+	public void augmentSprint(Sprint theSprint) {
+		if (isEmpty(theSprint.getSprintName()) || isEmpty(theSprint.getTeamName())) {
+			throw new IllegalArgumentException("Sprint name and Team name cannot be empty when using the JIRA Importer");
+		}
 
-		sprint.setSprintName(version.getName());
-		sprint.setTeamName(teamName);
-		sprint.setEndDate(version.getReleaseDate());
-		sprint.setRemoteIdentifier("JIRA", version.getName());
+		final List<RemoteVersion> versions = this.jiraConnector.getVersions(theSprint.getTeamName());
+		for (final RemoteVersion version : versions) {
+			if (theSprint.getSprintName().equals(version.getName())) {
+				theSprint.setEndDate(version.getReleaseDate());
+				theSprint.setRemoteIdentifier("JIRA", version.getId());
 
-		return sprint;
+				final List<RemoteIssue> issuesFromJqlSearch = this.jiraConnector.getIssuesFromJqlSearch("type =\"User story\" and fixVersion =\"" + theSprint.getSprintName() + "\"", 1000);
+				for (final RemoteIssue remoteIssue : issuesFromJqlSearch) {
+					LOGGER.info("Got Issue: [" + remoteIssue.getKey() + "] " + remoteIssue.getSummary());
+
+					theSprint.addOrUpdateUserStory(this.convertToUserStory(remoteIssue, theSprint));
+				}
+
+				return;
+			}
+		}
 	}
 
 	@Override
-	public Participant findParticipantByUser(String user) {
-		final RemoteUser remoteUser = this.jiraConnector.getUser(user);
+	public void augmentParticipant(Participant user) {
+		final RemoteUser remoteUser = this.jiraConnector.getUser(user.getUser());
 
 		if (remoteUser != null) {
-			return convertToParticipant(remoteUser);
+			user.setRemoteIdentifier("JIRA", remoteUser.getName());
+			user.setUser(remoteUser.getName());
+			user.setEmail(remoteUser.getEmail());
+			user.setDisplayName(remoteUser.getFullname());
 		}
-
-		return null;
 	}
 
-	private Participant convertToParticipant(RemoteUser remoteUser) {
-		final Participant participant = new Participant();
-
-		participant.setRemoteIdentifier("JIRA", remoteUser.getName());
-		participant.setUser(remoteUser.getName());
-		participant.setEmail(remoteUser.getEmail());
-		participant.setDisplayName(remoteUser.getFullname());
-
-		return participant;
-	}
 }

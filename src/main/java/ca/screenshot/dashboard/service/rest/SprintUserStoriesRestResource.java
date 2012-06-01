@@ -17,7 +17,7 @@ import java.util.Collection;
  *         Date: 17/05/12
  *         Time: 10:31 AM
  */
-@Path("/teams/{teamName}/userstories/")
+@Path("/teams/{teamName}/{sprintName}/userstories/")
 @Service
 public class SprintUserStoriesRestResource {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SprintUserStoriesRestResource.class);
@@ -26,8 +26,8 @@ public class SprintUserStoriesRestResource {
 	private SprintRepository sprintRepository;
 
 	@GET
-	public Collection<UserStory> getListOfUserStoriesForSprint(@PathParam("teamName") final String teamName) {
-		return this.sprintRepository.getSprintForTeam(teamName).getUserStories();
+	public Collection<UserStory> getListOfUserStoriesForSprint(@PathParam("teamName") final String teamName, @PathParam("sprintName") final String sprintName) {
+		return this.sprintRepository.getSprintForTeam(teamName, sprintName).getUserStories();
 	}
 
 

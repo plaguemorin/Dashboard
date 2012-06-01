@@ -3,7 +3,7 @@ package ca.screenshot.dashboard.service.providers.scm;
 import ca.screenshot.dashboard.entity.ActivityLog;
 import ca.screenshot.dashboard.entity.Participant;
 import ca.screenshot.dashboard.service.providers.ActivityLogProvider;
-import ca.screenshot.dashboard.service.providers.ParticipantProvider;
+import ca.screenshot.dashboard.service.providers.ParticipantAugmenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +26,7 @@ import java.util.List;
  *         Time: 11:35 AM
  */
 //@Service
-public class MercurialProvider implements ParticipantProvider, ActivityLogProvider {
+public class MercurialProvider implements ParticipantAugmenter, ActivityLogProvider {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MercurialProvider.class);
 
 	@Value("${mercurial.repositoryUrl}")
@@ -129,11 +129,6 @@ public class MercurialProvider implements ParticipantProvider, ActivityLogProvid
 	}
 
 	@Override
-	public Participant findParticipantByUser(String user) {
-		return null;
-	}
-
-	@Override
 	public List<ActivityLog> getLog() {
 		return null;
 	}
@@ -153,5 +148,9 @@ public class MercurialProvider implements ParticipantProvider, ActivityLogProvid
 			LOGGER.error("Unable to fetch changes", e);
 		}
 
+	}
+
+	@Override
+	public void augmentParticipant(Participant participant) {
 	}
 }

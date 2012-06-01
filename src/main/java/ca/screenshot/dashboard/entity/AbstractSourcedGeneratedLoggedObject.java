@@ -1,14 +1,14 @@
 package ca.screenshot.dashboard.entity;
 
+import javax.persistence.CascadeType;
+import javax.persistence.ManyToMany;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToMany;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import javax.xml.bind.annotation.XmlTransient;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
-import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * @author plaguemorin
@@ -17,38 +17,28 @@ import static java.util.Collections.unmodifiableCollection;
  */
 @MappedSuperclass
 public abstract class AbstractSourcedGeneratedLoggedObject extends AbstractLoggedValueObject implements SourcedGeneratedObject {
-	@OneToMany
-	private List<GeneratedSource> generatorList = new ArrayList<>();
+	@ManyToMany(cascade = {CascadeType.PERSIST})
+	private Map<String, GeneratedSource> generatorList = new HashMap<>();
 
-	@XmlElementWrapper(name = "generators")
-	@XmlElement(name = "generator")
-	public Collection<GeneratedSource> getGenerators() {
-		return unmodifiableCollection(generatorList);
+	@XmlTransient
+	public Map<String, GeneratedSource> getGenerators() {
+		return unmodifiableMap(generatorList);
 	}
 
 	@Override
-	public void addGenerator(GeneratedSource generatedSource) {
-		this.generatorList.add(generatedSource);
+	public void addGenerator(final String sourceName, GeneratedSource generatedSource) {
+		this.generatorList.put(sourceName, generatedSource);
 	}
 
 	@Override
 	public void updateGenerators(final SourcedGeneratedObject objectSourced) {
-		for (final GeneratedSource generatedSource : objectSourced.getGenerators()) {
-			if (this.generatorList.contains(generatedSource)) {
-				this.generatorList.get(this.generatorList.indexOf(generatedSource)).updateWith(generatedSource);
-			} else {
-				this.generatorList.add(generatedSource);
-			}
-		}
-	}
 
+	}
 
 	@Override
 	public GeneratedSource getForSourceName(String name) {
-		for (final GeneratedSource generatedSource : generatorList) {
-			if (generatedSource.getGenerator().equals(name)) {
-				return generatedSource;
-			}
+		if (this.generatorList.containsKey(name)) {
+			return this.generatorList.get(name);
 		}
 
 		return null;
@@ -68,8 +58,8 @@ public abstract class AbstractSourcedGeneratedLoggedObject extends AbstractLogge
 		} else {
 			final GeneratedSource gen = new GeneratedSource();
 			gen.setRemoteIdentifier(remoteIdentifier);
-			gen.setGenerator(sourceName);
-			this.addGenerator(gen);
+			gen.setLastUpdated(Calendar.getInstance().getTime());
+			this.addGenerator(sourceName, gen);
 		}
 	}
 }

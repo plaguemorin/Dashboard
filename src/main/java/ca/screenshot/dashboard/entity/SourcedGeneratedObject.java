@@ -1,6 +1,6 @@
 package ca.screenshot.dashboard.entity;
 
-import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author plaguemorin
@@ -8,15 +8,15 @@ import java.util.Collection;
  *         Time: 1:00 PM
  */
 public interface SourcedGeneratedObject {
-	Collection<GeneratedSource> getGenerators();
+	Map<String, GeneratedSource> getGenerators();
 
-	void addGenerator(final GeneratedSource generatedSource);
+	void addGenerator(final String sourceName, final GeneratedSource generatedSource);
 
-	void updateGenerators(SourcedGeneratedObject objectSourced);
+	void updateGenerators(final SourcedGeneratedObject objectSourced);
 
 	GeneratedSource getForSourceName(final String name);
 
 	String getRemoteIdentifier(String sourceName);
 
-	void setRemoteIdentifier(String sourceName, String remoteIdentifier);
+	void setRemoteIdentifier(final String sourceName, String remoteIdentifier);
 }

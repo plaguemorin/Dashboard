@@ -1,8 +1,10 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.persistence.Entity;
-import javax.xml.bind.annotation.XmlID;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Date;
+
+import static java.util.UUID.randomUUID;
 
 /**
  * @author plaguemorin
@@ -12,8 +14,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 public class GeneratedSource extends AbstractValueObject {
+	@Id
+	private String guid;
+
 	private String remoteIdentifier;
-	private String generator;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date lastUpdated;
+
+	@PrePersist
+	public void prePersist() {
+		if (this.guid == null) {
+			this.guid = randomUUID().toString();
+		}
+	}
 
 	public String getRemoteIdentifier() {
 		return remoteIdentifier;
@@ -24,17 +38,14 @@ public class GeneratedSource extends AbstractValueObject {
 	}
 
 	public void updateWith(final GeneratedSource generatedSource) {
-		super.updateWith(generatedSource);
 		this.remoteIdentifier = generatedSource.remoteIdentifier;
 	}
 
-
-	@XmlID
-	public String getGenerator() {
-		return this.generator;
+	public Date getLastUpdated() {
+		return lastUpdated;
 	}
 
-	public void setGenerator(String generator) {
-		this.generator = generator;
+	public void setLastUpdated(Date lastUpdated) {
+		this.lastUpdated = lastUpdated;
 	}
 }

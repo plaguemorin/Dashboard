@@ -7,6 +7,6 @@ import ca.screenshot.dashboard.entity.Participant;
  *         Date: 16/05/12
  *         Time: 7:02 PM
  */
-public interface ParticipantProvider {
-	Participant findParticipantByUser(final String user);
+public interface ParticipantAugmenter {
+	void augmentParticipant(final Participant participant);
 }

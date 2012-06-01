@@ -1,9 +1,6 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
@@ -13,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.UUID.randomUUID;
 
 /**
  */
@@ -20,28 +18,46 @@ import static java.util.Collections.unmodifiableCollection;
 @XmlType(name = "UserStory")
 @Entity
 public class UserStory extends AbstractSourcedGeneratedObject {
+	@Id
+	private String guid = randomUUID().toString();
+
 	@Enumerated(EnumType.STRING)
 	private UserStoryStatus storyStatus;
 
 	private String title;
+
+	@Column(length = 9000)
 	private String description;
 
-	@OneToMany
+	@OneToMany(cascade = {CascadeType.PERSIST}, mappedBy = "userStory")
 	private List<UserStoryTask> taskList = new ArrayList<>();
 
-	@OneToMany
+	@ManyToMany
 	private List<Participant> participantList = new ArrayList<>();
+
+	private Long storyPoints;
 
 	public void setTitle(String title) {
 		this.title = title;
 	}
 
 	public void setDescription(String description) {
-		this.description = description;
+		this.description = (description == null || description.length() <= 9000) ? description : description.substring(0, 9000);
 	}
 
 	public void addTask(UserStoryTask userStoryTask) {
 		this.taskList.add(userStoryTask);
+		userStoryTask.setUserStory(this);
+	}
+
+	public Long getTotalEstimatedTime() {
+		long i = 0;
+
+		for (final UserStoryTask task : this.taskList) {
+			i += task.getSecondsEstimated();
+		}
+
+		return i;
 	}
 
 	@XmlTransient
@@ -109,4 +125,21 @@ public class UserStory extends AbstractSourcedGeneratedObject {
 			}
 		}
 	}
+
+	public void setStoryPoints(Long storyPoints) {
+		this.storyPoints = storyPoints;
+	}
+
+	public Long getStoryPoints() {
+		return storyPoints;
+	}
+
+	public String getGuid() {
+		return guid;
+	}
+
+	public void setGuid(String guid) {
+		this.guid = guid;
+	}
+
 }

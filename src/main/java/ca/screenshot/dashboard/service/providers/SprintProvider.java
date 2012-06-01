@@ -9,9 +9,10 @@ import java.util.List;
  *         Date: 16/05/12
  *         Time: 7:39 PM
  */
-public interface SprintProvider
-{
+public interface SprintProvider {
 	Sprint findLatestSprint(String teamName);
 
 	List<Sprint> findPossibleSprints(String teamName);
+
+	void augmentSprint(Sprint theSprint);
 }

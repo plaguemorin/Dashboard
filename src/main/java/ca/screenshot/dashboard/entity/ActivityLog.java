@@ -1,11 +1,10 @@
 package ca.screenshot.dashboard.entity;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlValue;
 import java.util.Date;
+
+import static java.util.UUID.randomUUID;
 
 /**
  * @author plaguemorin
@@ -15,24 +14,32 @@ import java.util.Date;
 @XmlRootElement
 @Entity
 public class ActivityLog extends AbstractValueObject {
-	@OneToOne
-	private Participant who;
+	@Id
+	private String guid;
+
+	private String who;
+
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "SNAP_DATE")
 	private Date when;
 
 	private String what;
 
-	@XmlIDREF
-	public Participant getWho() {
+	@PrePersist
+	public void prePersist() {
+		if (this.guid == null) {
+			this.guid = randomUUID().toString();
+		}
+	}
+
+	public String getWho() {
 		return who;
 	}
 
-	public void setWho(Participant who) {
+	public void setWho(String who) {
 		this.who = who;
 	}
 
-	@XmlAttribute
 	public Date getWhen() {
 		return when;
 	}
@@ -41,7 +48,6 @@ public class ActivityLog extends AbstractValueObject {
 		this.when = when;
 	}
 
-	@XmlValue
 	public String getWhat() {
 		return what;
 	}

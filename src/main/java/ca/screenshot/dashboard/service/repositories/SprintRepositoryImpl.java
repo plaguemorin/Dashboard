@@ -1,5 +1,6 @@
 package ca.screenshot.dashboard.service.repositories;
 
+import ca.screenshot.dashboard.entity.Participant;
 import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.entity.UserStory;
 import ca.screenshot.dashboard.service.providers.SprintProvider;
@@ -8,11 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -30,21 +33,46 @@ public class SprintRepositoryImpl implements SprintRepository {
 	@Autowired
 	private List<UserStoryProvider> userStoryProviders;
 
-	private Map<String, Sprint> sprintMap = new LinkedHashMap<>();
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	@Override
-	public Sprint getSprintForTeam(String teamName) {
-		if (sprintMap.containsKey(teamName)) {
-			return sprintMap.get(teamName);
+	@Transactional
+	public Sprint getSprintForTeam(String teamName, String sprintName) {
+		final Query query = entityManager.createNamedQuery("Sprint.specificSprint");
+		query.setParameter("teamName", teamName);
+		query.setParameter("sprintName", sprintName);
+		final List<Sprint> sprints = query.getResultList();
+
+		if (sprints.isEmpty()) {
+			final Sprint theSprint = new Sprint();
+			theSprint.setSprintName(sprintName);
+			theSprint.setTeamName(teamName);
+
+			for (final SprintProvider provider : this.sprintProviders) {
+				provider.augmentSprint(theSprint);
+			}
+
+			for (final UserStory userStory : theSprint.getUserStories()) {
+				for (final UserStoryProvider provider : this.userStoryProviders) {
+					provider.augmentUserStory(userStory);
+				}
+
+				for (final Participant participant : userStory.getParticipants()) {
+					theSprint.addOrUpdateParticipant(participant);
+				}
+			}
+
+			entityManager.persist(theSprint);
+
+			return theSprint;
 		}
 
-		this.buildSprintForTeam(teamName);
-
-
-		return this.getSprintForTeam(teamName);
+		return sprints.get(0);
 	}
 
 	@Override
+	@Transactional
 	public List<Sprint> getPossibleSprints(String teamName) {
 		final List<Sprint> sprints = new ArrayList<>();
 		for (final SprintProvider provider : this.sprintProviders) {
@@ -53,25 +81,9 @@ public class SprintRepositoryImpl implements SprintRepository {
 		return unmodifiableList(sprints);
 	}
 
-	private void buildSprintForTeam(final String teamName) {
-		for (final SprintProvider provider : this.sprintProviders) {
-			final Sprint latestSprint = provider.findLatestSprint(teamName);
-			if (latestSprint != null) {
-				LOGGER.info("Found sprint for team: " + latestSprint.getSprintName());
-				this.sprintMap.put(teamName, latestSprint);
-				this.updateUserStoriesForSprint(latestSprint);
-				return;
-			}
-		}
+	@Override
+	public Sprint getCurrentSprintForTeam(String teamName) {
+		return null;
 	}
 
-	private void updateUserStoriesForSprint(Sprint latestSprint) {
-		for (final UserStoryProvider storyProvider : this.userStoryProviders) {
-			final List<UserStory> userStoriesForSprint = storyProvider.getUserStoriesForSprint(latestSprint);
-
-			for (final UserStory userStory : userStoriesForSprint) {
-				latestSprint.updateWith(userStory);
-			}
-		}
-	}
 }

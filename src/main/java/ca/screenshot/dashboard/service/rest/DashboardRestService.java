@@ -25,7 +25,7 @@ public class DashboardRestService {
 	@Path("/{teamName}")
 	public Dashboard getDashboardForTeam(@PathParam("teamName") final String teamName) {
 		final Dashboard dashboard = new Dashboard();
-		final Sprint theSprint = this.sprintRepository.getSprintForTeam(teamName);
+		final Sprint theSprint = this.sprintRepository.getCurrentSprintForTeam(teamName);
 
 		dashboard.setTeamName(theSprint.getTeamName());
 		dashboard.setSprintName(theSprint.getSprintName());

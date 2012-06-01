@@ -1,7 +1,12 @@
 package ca.screenshot.dashboard.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import static java.util.UUID.randomUUID;
 
 /**
  * @author plaguemorin
@@ -11,9 +16,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @Entity
 public class UserStoryTask extends AbstractSourcedGeneratedLoggedObject {
+	@Id
+	private String guid;
 
 	private String title;
-	private Long minutesEstimated;
+	private Long secondsEstimated;
+
+	@ManyToOne(optional = false)
+	private UserStory userStory;
+
+	@PrePersist
+	public void prePersist() {
+		if (this.guid == null) {
+			this.guid = randomUUID().toString();
+		}
+	}
 
 	public void setTitle(String title) {
 		this.title = title;
@@ -30,11 +47,19 @@ public class UserStoryTask extends AbstractSourcedGeneratedLoggedObject {
 		this.title = storyTask.title;
 	}
 
-	public Long getMinutesEstimated() {
-		return minutesEstimated;
+	public Long getSecondsEstimated() {
+		return secondsEstimated;
 	}
 
-	public void setMinutesEstimated(Long minutesEstimated) {
-		this.minutesEstimated = minutesEstimated;
+	public void setSecondsEstimated(Long minutesEstimated) {
+		this.secondsEstimated = minutesEstimated;
+	}
+
+	public UserStory getUserStory() {
+		return userStory;
+	}
+
+	public void setUserStory(UserStory userStory) {
+		this.userStory = userStory;
 	}
 }

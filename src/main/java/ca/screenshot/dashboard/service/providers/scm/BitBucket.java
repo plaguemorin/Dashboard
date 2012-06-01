@@ -3,7 +3,7 @@ package ca.screenshot.dashboard.service.providers.scm;
 import ca.screenshot.dashboard.entity.ActivityLog;
 import ca.screenshot.dashboard.entity.Participant;
 import ca.screenshot.dashboard.service.providers.ActivityLogProvider;
-import ca.screenshot.dashboard.service.providers.ParticipantProvider;
+import ca.screenshot.dashboard.service.providers.ParticipantAugmenter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,14 +14,13 @@ import java.util.List;
  *         Time: 1:40 PM
  */
 @Service
-public class BitBucket implements ParticipantProvider, ActivityLogProvider {
+public class BitBucket implements ParticipantAugmenter, ActivityLogProvider {
 	@Override
 	public List<ActivityLog> getLog() {
 		return null;
 	}
 
 	@Override
-	public Participant findParticipantByUser(String user) {
-		return null;
+	public void augmentParticipant(Participant participant) {
 	}
 }

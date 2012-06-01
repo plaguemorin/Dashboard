@@ -1,9 +1,6 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
@@ -21,11 +18,16 @@ import static java.util.Collections.unmodifiableCollection;
  */
 @XmlRootElement
 @Entity
+@NamedQueries({
+					  @NamedQuery(name = "Sprint.specificSprint", query = "SELECT a FROM Sprint a WHERE a.sprintIdentity.sprintName = :sprintName AND a.sprintIdentity.teamName = :teamName"),
+					  @NamedQuery(name = "Sprint.allSprintForTeam", query = "SELECT a FROM Sprint a WHERE a.sprintIdentity.teamName = :teamName"),
+					  @NamedQuery(name = "Sprint.currentSprintForTeam", query = "SELECT a FROM Sprint a WHERE a.sprintIdentity.teamName = :teamName AND a.endDate < current_timestamp() ORDER BY a.endDate ASC")
+})
 public class Sprint extends AbstractSourcedGeneratedLoggedObject {
-	@OneToMany
+	@OneToMany(cascade = {CascadeType.PERSIST})
 	private List<UserStory> userStoryList = new ArrayList<>();
 
-	@OneToMany
+	@ManyToMany
 	private List<Participant> participantList = new ArrayList<>();
 
 	@Temporal(TemporalType.TIMESTAMP)
@@ -34,33 +36,34 @@ public class Sprint extends AbstractSourcedGeneratedLoggedObject {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Calendar startDate;
 
-	private String sprintName;
-	private String teamName;
+	@EmbeddedId
+	private SprintIdentity sprintIdentity = new SprintIdentity();
 
 
 	public String getSprintName() {
-		return sprintName;
+		return sprintIdentity.getSprintName();
 	}
 
 	public void setSprintName(String sprintName) {
-		this.sprintName = sprintName;
+		this.sprintIdentity.setSprintName(sprintName);
 	}
 
 	public void setTeamName(String teamName) {
-		this.teamName = teamName;
+		this.sprintIdentity.setTeamName(teamName);
 	}
 
 	public String getTeamName() {
-		return this.teamName;
+		return this.sprintIdentity.getTeamName();
 	}
 
-	public void updateWith(final UserStory userStory) {
+	public void addOrUpdateUserStory(final UserStory userStory) {
 		if (userStoryList.contains(userStory)) {
 			final UserStory oldUserStory = userStoryList.get(userStoryList.indexOf(userStory));
 			oldUserStory.updateWith(userStory);
 		} else {
 			userStoryList.add(userStory);
 		}
+
 	}
 
 	public void setEndDate(Calendar endDate) {

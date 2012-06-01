@@ -2,6 +2,7 @@ package ca.screenshot.dashboard.service.providers.jira;
 
 import ca.screenshot.dashboard.external.jira.*;
 import org.apache.axis.AxisFault;
+import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,7 +83,19 @@ public class JiraConnector {
 		this.setupConnection();
 
 		try {
-			return asList(this.jiraSoapService.getIssuesFromJqlSearch(this.authKey, jql, number));
+			final List<RemoteIssue> remoteIssues = asList(this.jiraSoapService.getIssuesFromJqlSearch(this.authKey, jql, number));
+
+			if (LOGGER.isDebugEnabled()) {
+				for (final RemoteIssue remoteIssue : remoteIssues) {
+					for (final RemoteCustomFieldValue customFieldValue : remoteIssue.getCustomFieldValues()) {
+						LOGGER.debug("Custom Field Key [" + customFieldValue.getKey() +
+											 "], Id [" + customFieldValue.getCustomfieldId() +
+											 "], Value [" + ArrayUtils.toString(customFieldValue.getValues()) + "]");
+					}
+				}
+			}
+
+			return remoteIssues;
 		} catch (RemoteException e) {
 			LOGGER.error("Unable to execute remote JQL query on server \"" + this.jiraUrl + "\"", e);
 			throw new IllegalStateException("Remote exception caught", e);

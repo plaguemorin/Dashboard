@@ -1,7 +1,6 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -13,10 +12,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @Entity
+@NamedQueries({
+					  @NamedQuery(name = "Participant.findByUser", query = "SELECT a FROM Participant a WHERE a.user = :user")
+})
 public class Participant extends AbstractSourcedGeneratedObject {
 	@Id
 	private String user;
 
+	@Column(unique = true)
 	private String email;
 
 	private String displayName;
@@ -49,5 +52,21 @@ public class Participant extends AbstractSourcedGeneratedObject {
 
 	public String getDisplayName() {
 		return displayName;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof Participant)) return false;
+
+		Participant that = (Participant) o;
+
+		return user.equals(that.user);
+
+	}
+
+	@Override
+	public int hashCode() {
+		return user.hashCode();
 	}
 }
