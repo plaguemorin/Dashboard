@@ -1,19 +1,15 @@
 package ca.screenshot.dashboard.service.repositories;
 
 import ca.screenshot.dashboard.entity.Participant;
-import ca.screenshot.dashboard.service.providers.ParticipantAugmenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import java.util.List;
+import javax.persistence.TypedQuery;
 
 /**
  * @author plaguemorin
@@ -24,9 +20,6 @@ import java.util.List;
 public class ParticipantRepositoryImpl implements ParticipantRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ParticipantRepositoryImpl.class);
 
-	@Autowired
-	private List<ParticipantAugmenter> participantAugmenterList;
-
 	@PersistenceContext
 	private EntityManager entityManager;
 
@@ -34,24 +27,9 @@ public class ParticipantRepositoryImpl implements ParticipantRepository {
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public Participant findParticipantByUser(final String participant) {
-		final Query query = entityManager.createNamedQuery("Participant.findByUser");
+		final TypedQuery<Participant> query = entityManager.createNamedQuery("Participant.findByUser", Participant.class);
 		query.setParameter("user", participant.toLowerCase());
 
-		try {
-			return (Participant) query.getSingleResult();
-		} catch (final NoResultException ignored) {
-			LOGGER.debug("User \"" + participant + "\" was not found in DB");
-		}
-
-		final Participant user = new Participant();
-		user.setUser(participant.toLowerCase());
-
-		for (final ParticipantAugmenter participantAugmenter : this.participantAugmenterList) {
-			participantAugmenter.augmentParticipant(user);
-		}
-
-		entityManager.persist(user);
-
-		return user;
+		return query.getSingleResult();
 	}
 }

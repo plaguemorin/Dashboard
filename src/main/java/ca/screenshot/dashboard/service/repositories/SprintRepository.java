@@ -20,4 +20,6 @@ public interface SprintRepository {
 	Collection<UserStoryTask> getTasksForUserStoryInSprint(String teamName, String sprintName, String userStoryGuid);
 
 	Sprint createNewSprintForTeamWithName(String teamName, String sprintName);
+
+	void saveSprint(final Sprint sprint);
 }

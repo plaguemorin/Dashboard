@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.*;
 
-import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.*;
 
 
 /**
@@ -91,11 +91,28 @@ public class Sprint extends AbstractLoggedValueObject {
 			participantRoleMap.put(participantRole.getParticipant(), participantRole.getRole());
 		}
 
-		return participantRoleMap;
+		return unmodifiableMap(participantRoleMap);
 	}
 
-	public void addOrUpdateParticipant(final Participant participant) {
-		// Check if we have this participant
+	@XmlTransient
+	public List<Participant> getParticipants(final Role role) {
+		final List<Participant> list = new ArrayList<>();
+
+		for (final ParticipantRole participantRole : this.participantList) {
+			if (participantRole.getRole() == role) {
+				list.add(participantRole.getParticipant());
+			}
+		}
+
+		return unmodifiableList(list);
+	}
+
+	public void addParticipant(final Participant participant, final Role role) {
+		final ParticipantRole participantRole = new ParticipantRole();
+		participantRole.setRole(role);
+		participantRole.setParticipant(participant);
+
+		this.participantList.add(participantRole);
 	}
 
 	public UserStory getUserStory(String userStoryGuid) {

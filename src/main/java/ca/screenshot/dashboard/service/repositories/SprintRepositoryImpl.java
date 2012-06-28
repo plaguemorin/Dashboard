@@ -1,25 +1,17 @@
 package ca.screenshot.dashboard.service.repositories;
 
-import ca.screenshot.dashboard.entity.Participant;
 import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.entity.UserStory;
 import ca.screenshot.dashboard.entity.UserStoryTask;
-import ca.screenshot.dashboard.service.providers.SprintProvider;
-import ca.screenshot.dashboard.service.providers.UserStoryProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import java.util.ArrayList;
+import javax.persistence.TypedQuery;
 import java.util.Collection;
 import java.util.List;
-
-import static java.util.Collections.unmodifiableList;
 
 /**
  * @author PLMorin
@@ -29,75 +21,41 @@ import static java.util.Collections.unmodifiableList;
 public class SprintRepositoryImpl implements SprintRepository {
 	private final static Logger LOGGER = LoggerFactory.getLogger(SprintRepositoryImpl.class);
 
-	@Autowired
-	private List<SprintProvider> sprintProviders;
-
-	@Autowired
-	private List<UserStoryProvider> userStoryProviders;
-
 	@PersistenceContext
 	private EntityManager entityManager;
 
 	@Override
 	@Transactional
-	public Sprint getSprintForTeam(String teamName, String sprintName) {
-		final Query query = entityManager.createNamedQuery("Sprint.specificSprint");
+	public Sprint getSprintForTeam(final String teamName, final String sprintName) {
+		final TypedQuery<Sprint> query = entityManager.createNamedQuery("Sprint.specificSprint", Sprint.class);
 		query.setParameter("teamName", teamName);
 		query.setParameter("sprintName", sprintName);
-		final List<Sprint> sprints = query.getResultList();
-
-		if (sprints.isEmpty()) {
-			final Sprint theSprint = new Sprint();
-			theSprint.setSprintName(sprintName);
-			theSprint.setTeamName(teamName);
-
-			for (final SprintProvider provider : this.sprintProviders) {
-				provider.augmentSprint(theSprint);
-			}
-
-			for (final UserStory userStory : theSprint.getUserStories()) {
-				for (final UserStoryProvider provider : this.userStoryProviders) {
-					provider.augmentUserStory(userStory);
-				}
-
-				for (final Participant participant : userStory.getParticipants()) {
-					theSprint.addOrUpdateParticipant(participant);
-				}
-			}
-
-			entityManager.persist(theSprint);
-
-			return theSprint;
-		}
-
-		return sprints.get(0);
+		return query.getSingleResult();
 	}
 
 	@Override
 	@Transactional
-	public List<Sprint> getPossibleSprints(String teamName) {
-		final List<Sprint> sprints = new ArrayList<>();
-		for (final SprintProvider provider : this.sprintProviders) {
-			sprints.addAll(provider.findPossibleSprints(teamName));
-		}
-		return unmodifiableList(sprints);
+	public List<Sprint> getPossibleSprints(final String teamName) {
+		final TypedQuery<Sprint> sprints = entityManager.createNamedQuery("Sprint.allSprintForTeam", Sprint.class);
+		sprints.setParameter("teamName", teamName);
+		return sprints.getResultList();
 	}
 
 	@Override
-	public Sprint getCurrentSprintForTeam(String teamName) {
+	public Sprint getCurrentSprintForTeam(final String teamName) {
 		return null;
 	}
 
 	@Override
 	@Transactional
-	public Collection<UserStoryTask> getTasksForUserStoryInSprint(String teamName, String sprintName, String userStoryGuid) {
+	public Collection<UserStoryTask> getTasksForUserStoryInSprint(final String teamName, final String sprintName, final String userStoryGuid) {
 		final Collection<UserStoryTask> tasks = this.getSprintForTeam(teamName, sprintName).getUserStory(userStoryGuid).getTasks();
 		tasks.size();
 		return tasks;
 	}
 
 	@Override
-	public Sprint createNewSprintForTeamWithName(String teamName, String sprintName) {
+	public Sprint createNewSprintForTeamWithName(final String teamName, final String sprintName) {
 		final Sprint newSprint = new Sprint();
 		newSprint.setTeamName(teamName);
 		newSprint.setSprintName(sprintName);
@@ -105,6 +63,11 @@ public class SprintRepositoryImpl implements SprintRepository {
 		this.entityManager.persist(newSprint);
 
 		return newSprint;
+	}
+
+	@Override
+	public void saveSprint(final Sprint sprint) {
+		this.entityManager.merge(sprint);
 	}
 
 }
