@@ -16,13 +16,12 @@ import javax.ws.rs.PathParam;
  *         Time: 11:02 AM
  */
 @Service
-@Path("/dashboard")
+@Path("/teams/{teamName}/dashbaord")
 public class DashboardRestService {
 	@Autowired
 	private SprintRepository sprintRepository;
 
 	@GET
-	@Path("/{teamName}")
 	public Dashboard getDashboardForTeam(@PathParam("teamName") final String teamName) {
 		final Dashboard dashboard = new Dashboard();
 		final Sprint theSprint = this.sprintRepository.getCurrentSprintForTeam(teamName);

@@ -1,7 +1,9 @@
 package ca.screenshot.dashboard.service.repositories;
 
 import ca.screenshot.dashboard.entity.Sprint;
+import ca.screenshot.dashboard.entity.UserStoryTask;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -14,4 +16,8 @@ public interface SprintRepository {
 	List<Sprint> getPossibleSprints(String teamName);
 
 	Sprint getCurrentSprintForTeam(String teamName);
+
+	Collection<UserStoryTask> getTasksForUserStoryInSprint(String teamName, String sprintName, String userStoryGuid);
+
+	Sprint createNewSprintForTeamWithName(String teamName, String sprintName);
 }

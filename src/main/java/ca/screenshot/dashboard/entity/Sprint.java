@@ -3,10 +3,7 @@ package ca.screenshot.dashboard.entity;
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Collections.unmodifiableCollection;
 
@@ -23,12 +20,18 @@ import static java.util.Collections.unmodifiableCollection;
 					  @NamedQuery(name = "Sprint.allSprintForTeam", query = "SELECT a FROM Sprint a WHERE a.sprintIdentity.teamName = :teamName"),
 					  @NamedQuery(name = "Sprint.currentSprintForTeam", query = "SELECT a FROM Sprint a WHERE a.sprintIdentity.teamName = :teamName AND a.endDate < current_timestamp() ORDER BY a.endDate ASC")
 })
-public class Sprint extends AbstractSourcedGeneratedLoggedObject {
-	@OneToMany(cascade = {CascadeType.PERSIST})
+public class Sprint extends AbstractLoggedValueObject {
+	@EmbeddedId
+	private SprintIdentity sprintIdentity = new SprintIdentity();
+
+	@OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.EAGER)
 	private List<UserStory> userStoryList = new ArrayList<>();
 
-	@ManyToMany
-	private List<Participant> participantList = new ArrayList<>();
+	@OneToMany
+	private List<ParticipantRole> participantList = new ArrayList<>();
+
+	@OneToMany
+	private List<SprintDayParticipant> sprintDayParticipants = new ArrayList<>();
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Calendar endDate;
@@ -36,8 +39,10 @@ public class Sprint extends AbstractSourcedGeneratedLoggedObject {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Calendar startDate;
 
-	@EmbeddedId
-	private SprintIdentity sprintIdentity = new SprintIdentity();
+	private Integer workDays;
+
+	@Column(length = 9000)
+	private String goals;
 
 
 	public String getSprintName() {
@@ -63,7 +68,6 @@ public class Sprint extends AbstractSourcedGeneratedLoggedObject {
 		} else {
 			userStoryList.add(userStory);
 		}
-
 	}
 
 	public void setEndDate(Calendar endDate) {
@@ -80,17 +84,18 @@ public class Sprint extends AbstractSourcedGeneratedLoggedObject {
 	}
 
 	@XmlTransient
-	public Collection<Participant> getParticipants() {
-		return unmodifiableCollection(this.participantList);
+	public Map<Participant, Role> getParticipants() {
+		final Map<Participant, Role> participantRoleMap = new HashMap<>();
+
+		for (final ParticipantRole participantRole : this.participantList) {
+			participantRoleMap.put(participantRole.getParticipant(), participantRole.getRole());
+		}
+
+		return participantRoleMap;
 	}
 
-	public void addOrUpdateParticipant(Participant p) {
-		if (participantList.contains(p)) {
-			final Participant oldParticipant = participantList.get(participantList.indexOf(p));
-			oldParticipant.updateWith(p);
-		} else {
-			participantList.add(p);
-		}
+	public void addOrUpdateParticipant(final Participant participant) {
+		// Check if we have this participant
 	}
 
 	public UserStory getUserStory(String userStoryGuid) {
@@ -109,5 +114,21 @@ public class Sprint extends AbstractSourcedGeneratedLoggedObject {
 
 	public void setStartDate(Calendar startDate) {
 		this.startDate = startDate;
+	}
+
+	public Integer getWorkDays() {
+		return workDays;
+	}
+
+	public void setWorkDays(Integer workDays) {
+		this.workDays = workDays;
+	}
+
+	public String getGoals() {
+		return goals;
+	}
+
+	public void setGoals(String goals) {
+		this.goals = goals;
 	}
 }

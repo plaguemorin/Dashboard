@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
 					  @NamedQuery(name = "Participant.findByUser", query = "SELECT a FROM Participant a WHERE a.user = :user")
 })
-public class Participant extends AbstractSourcedGeneratedObject {
+public class Participant extends AbstractValueObject {
 	@Id
 	private String user;
 
@@ -23,6 +23,8 @@ public class Participant extends AbstractSourcedGeneratedObject {
 	private String email;
 
 	private String displayName;
+
+	private Integer hoursPerDay;
 
 	@XmlAttribute(name = "user")
 	@XmlID
@@ -68,5 +70,13 @@ public class Participant extends AbstractSourcedGeneratedObject {
 	@Override
 	public int hashCode() {
 		return user.hashCode();
+	}
+
+	public Integer getHoursPerDay() {
+		return hoursPerDay;
+	}
+
+	public void setHoursPerDay(Integer hoursPerDay) {
+		this.hoursPerDay = hoursPerDay;
 	}
 }

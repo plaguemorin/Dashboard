@@ -1,12 +1,14 @@
 package ca.screenshot.dashboard.service.rest;
 
 import ca.screenshot.dashboard.service.repositories.SprintRepository;
+import ca.screenshot.dashboard.service.rest.vo.ListOfTeams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import java.util.List;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import static java.util.Arrays.asList;
 
@@ -17,14 +19,16 @@ import static java.util.Arrays.asList;
  */
 @Path("/teams")
 @Service
-public class RootTeamRestResource
-{
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+public class RootTeamRestResource {
 	@Autowired
 	private SprintRepository sprintProvider;
 
 	@GET
-	public List<String> getTeamNames()
-	{
-		return asList("CANADIENS");
+	public ListOfTeams getTeamNames() {
+		final ListOfTeams listOfTeams = new ListOfTeams();
+		listOfTeams.setTeams(asList("CANADIENS"));
+
+		return listOfTeams;
 	}
 }

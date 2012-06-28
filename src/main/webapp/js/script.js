@@ -1,285 +1,324 @@
-/* Author:
-
+/**
+ * List all the available teams
+ *
+ * @param {Function} successCallback
  */
+function team_list(successCallback) {
+	console.log("[Text] Getting Team List");
 
-// setup self refresh every 10 minutes
-setTimeout("location.reload(true);", 10 * 60000);
-
-update();
-
-var lastUpdateTime = 0;
-
-function update()
-{
 	$.ajax({
-		url: "dashboard2.json",
-		success: renderData,
-		error: function (data)
-		{
-			// An error occured
+		url: "/api/teams/",
+		contentType:"application/xml",
+		method: "GET",
+		dataType: "xml",
+		success: function(data) {
+			successCallback($(data));
+		},
+		complete: function(jqXHR, textStatus) {
+			console.log("[Teams] Done with status: " + textStatus);
 		}
 	});
-}
-
-function renderData(data)
-{
-	console.log(data);
-
-	updateQuote(data.quote);
-	updateSprintData(data.sprintDays);
-
-	//updateActivityLog(data.activityLog);
-
-	lastUpdateTime = data.generatedTime;
-	setTimeout("update();", 2 * 60000);
-}
-
-function updateSprintData(data) {
-	console.log(data);
 }
 
 /**
- * Updates the text of the quote
+ * List all sprints for a team
+ *
+ * @param {String} teamName
+ * @param {Function} successCallback
  */
-function updateQuote(data)
-{
-	$("#quote").fadeOut('slow', function()
-	{
-		$("#quote").text(data);
-		$("#quote").fadeIn('slow');
+function sprint_list(teamName, successCallback) {
+	$.ajax({
+		url: "/api/teams/" + encodeURIComponent(teamName) + "/",
+		contentType:"application/xml",
+		method: "GET",
+		dataType: "xml",
+		success: function(data) {
+			successCallback($(data));
+		},
+
+		error: function() {
+
+		}
 	});
 }
 
-function updateActivityLog(data)
-{
-	var added = 0;
+/**
+ * Gets a sprints
+ *
+ * @param {String} teamName
+ * @param {String} sprintName
+ * @param {Function} successCallback
+ */
+function sprint_get(teamName, sprintName, successCallback) {
+	$.ajax({
+		url: "/api/teams/" + encodeURIComponent(teamName) + "/" + encodeURIComponent(sprintName) + "/",
+		contentType:"application/xml",
+		method: "GET",
+		dataType: "xml",
+		success: function(data) {
+			successCallback($(data));
+		},
 
-	for (var i in data) {
-		var thisItem = data[i];
+		error: function() {
 
-		if ($("#" + thisItem.guid).length == 0) {
-			var $item = singleActivityLog(thisItem);
-			$("#activityLog").prepend($item);
-
-			added++;
 		}
-	}
-
-	console.log("Added " + added + " activity log");
+	});
 }
 
-function singleActivityLog(al)
-{
-	var $activityLog = $("<div />");
+/**
+ * Creates a sprint for a team
+ *
+ * @param {String} teamName
+ * @param {String} sprintName
+ * @param {Function} successCallback
+ */
+function sprint_create(teamName, sprintName, successCallback) {
+	$.ajax({
+		url: "/api/teams/" + encodeURIComponent(teamName) + "/" + encodeURIComponent(sprintName) + "/",
+		contentType:"application/xml",
+		method: "POST",
+		dataType: "xml",
+		success: function(data) {
+			successCallback(teamName, sprintName);
+		},
 
-	var $desc = $("<h3 />");
-	$desc.addClass('description');
-	$desc.text(al.description);
+		error: function() {
 
-	var $time = $("<span />");
-	$time.addClass('time');
-	$time.text((new Date(al.time * 1000)).toDateString());
-
-	var $who = $("<span />");
-	$who.addClass("author");
-	$who.text(al.who);
-
-	$activityLog.attr("id", al.guid);
-	$activityLog.data("time", al.time);
-	$activityLog.data("source", al.source);
-	$activityLog.addClass("new");
-	$activityLog.addClass(al.source);
-
-	$activityLog.append($desc);
-	$activityLog.append($time);
-	$activityLog.append($who);
-
-	return $activityLog;
-}
-
-function populateCi(data)
-{
-	var $ci = $("<div />");
-	$ci.append($("<h2 />").text("Builds"));
-	$ci.addClass("ciBuilds");
-
-	for (var i in data) {
-		var $build = $("<div />");
-		$build.addClass("build");
-		$build.text(i);
-		$build.addClass(data[i].status);
-
-		$ci.append($build);
-	}
-
-	$("#ciBuilds").html($ci);
-	setTimeout("updateBuild()", 60000);
-}
-
-function populateServerStatus(data)
-{
-	var $servers = $("<div />").addClass("servers");
-	$servers.append($("<h2 />").text("Server Status"));
-
-	for (var serverId in data) {
-		var $server = $("<div />").text(serverId);
-		if (data[serverId].isRunning) {
-			$server.addClass("running");
-		} else {
-			$server.addClass("down");
 		}
-
-		$servers.append($server);
-	}
-
-	$("#serverStatus").html($servers);
-	setTimeout("updateServerStatus()", 60000);
+	});
 }
 
-function getStoriesInStatus(data, statusName)
-{
-	if (data.statues[statusName]) {
-		return data.statues[statusName].count;
-	}
+function sprint_userstories_list(teamName, sprintName, successCallback) {
+	$.ajax({
+		url: "/api/teams/" + encodeURIComponent(teamName) + "/" + encodeURIComponent(sprintName) + "/userstories/",
+		contentType:"application/xml",
+		method: "GET",
+		dataType: "xml",
+		success: function(data) {
+			successCallback($(data));
+		},
 
-	return 0;
-}
+		error: function() {
 
-function populateSprintCard(sprintData)
-{
-	var usdone, ustodo;
-	usdone = 0;
-	ustodo = 0;
-
-	for (var i in sprintData.userStories) {
-		if (sprintData.userStories[i].status == "Verified/Closed") {
-			usdone += sprintData.userStories[i].storyPoints;
-		} else {
-			ustodo += sprintData.userStories[i].storyPoints;
 		}
-	}
+	});
 
-	$("#sprintCardEndDate").text(sprintData.endDate);
-	$("#sprintCardDaysLeft").text(sprintData.daysLeft);
-	$("#sprintCardNumberSubTasks").text(sprintData.numberTasks);
-	$("#sprintCardNumberUserStory").text(sprintData.numberUserStories);
-	$("#sprintCardUSDone").text(usdone + "pts");
-	$("#sprintCardUSTodo").text(ustodo + "pts");
-
-	$("#sprintCardNumberToDo").text(getStoriesInStatus(sprintData, "Open"));
-	$("#sprintCardNumberUnresolved").text(getStoriesInStatus(sprintData, "Unresolved"));
-	$("#sprintCardNumberInProgress").text(getStoriesInStatus(sprintData, "In Progress"));
-	$("#sprintCardNumberResolved").text(getStoriesInStatus(sprintData, "Resolved"));
-	$("#sprintCardNumberDone").text(getStoriesInStatus(sprintData, "Verified/Closed"));
 }
 
-function makeSprintGraph(sprintData)
-{
-	var numTodo = getStoriesInStatus(sprintData, "Open") + getStoriesInStatus(sprintData, "Reopened");
-	var numInProgress = getStoriesInStatus(sprintData, "In Progress") + getStoriesInStatus(sprintData, "Resolved");
-	var numDone = getStoriesInStatus(sprintData, "Verified/Closed");
+// the widget definition, where "custom" is the namespace,
+// "colorize" the widget name
+$.widget("custom.teamList", {
+	// default options
+	options: {
+		selelectTeam: null,
+		okButton: null,
+		newButton: null,
 
-	var total = numTodo + numInProgress + numDone;
+		// callbacks
+		change: null
+	},
 
-	var pcentTodo = (numTodo / total) * 100.0;
-	var pcentProgress = (numInProgress / total) * 100.0;
-	var pcentDone = (numDone / total) * 100.0;
+	// the constructor
+	_create: function() {
+		this.element
+			// add a class for theming
+				.addClass("custom-team-list")
+			// prevent double click to select text
+				.disableSelection();
 
-	var $todo = $("<div />").addClass("todo").css("width", pcentTodo + "%").append("To Do");
-	var $progress = $("<div />").addClass("progress").css("width", pcentProgress + "%").append("In Progress");
-	var $done = $("<div />").addClass("done").css("width", pcentDone + "%").append("Done");
+		this.selelectTeam = $("<select>", {"class": "custom-team-list-select"}).appendTo(this.element).select();
+		this.okButton = $("<button></button>", {"class": "custom-team-list-ok"}).appendTo(this.element).text("Ok").button();
 
-	return $("<div />").addClass("sprintGraph").append($todo).append($progress).append($done);
-}
-
-function makeUserStory(userStory)
-{
-	var $title = $("<h2 />").text(userStory.key);
-	var $desc = $("<p />").text(userStory.title);
-	var $points = $("<span />").addClass("points").text(userStory.storyPoints);
-
-	var $task = $("<div />").addClass("userStory").append($title).append($desc).append($points);
-	if (userStory.status == "Verified/Closed") {
-		$task.addClass("done");
-	}
-
-	return $task;
-}
-
-function doBurnDown(dayData)
-{
-	var x = [];
-	var y = [];
-	var y2 = [];
-	var y3 = [];
-
-	for (var i in dayData) {
-		x.push(x.length);
-		y3.push(0);
-
-		if (!dayData[i].isFuture) {
-			y.push(dayData[i].numTasksLeft);
-		}
-	}
-
-	var perDay = y[0] / (x.length - 1);
-	for (var w in x) {
-		y2.push(y[0] - (perDay * w));
-	}
-
-	var sprintLineColor = "rgb(200, 0, 0)";
-	if (y2[ y.length - 1 ] > y[y.length - 1]) {
-		sprintLineColor = "hsb(0.6,.75, .75)";
-	}
-
-	$("svg").remove();
-	var $container = $(document);
-
-	var r = Raphael(0, 0, $container.width(), $container.height());
-	r.linechart(0, 0,
-			$container.width(), $container.height(),
-			x,
-			[y, y2, y3],
-			{
-				symbol: "",
-				colors: [sprintLineColor, "rgba(255,255,255,.25)", "rgba(255,255,255,.25)"]
+		// in 1.9 would use this._bind( this.changer, { change: "teamList" });
+		var that = this;
+		this.selelectTeam.bind("change.teamList", function() {
+			// _bind would handle this check
+			if (that.options.disabled) {
+				return;
 			}
-	);
-	$("svg").css("z-index", "-1000");
-}
 
-var genTime = Date.now();
-function updateGenTime()
-{
-	var ago = Math.floor((Date.now() - genTime) / 1000);
-	var seconds = ago % 60;
-	var minutes = Math.floor(ago / 60);
-	var hours = 0;
+		});
 
-	$("#lastUpdate").text("Generated " + minutes + " minutes, " + seconds + " seconds ago");
+		this.okButton.bind("click.teamList", function(event) {
+			if (that.options.disabled) {
+				return;
+			}
 
-	setTimeout("updateGenTime()", 1000);
-}
+			that._trigger("selected", event, {"teamName": that.selelectTeam.val()});
+			return false;
+		});
 
-updateGenTime();
+		this._refresh();
+	},
 
-function populateSprintData(data)
-{
-	$(".sprintName").text(data.name);
+	_updateOptions: function(teamData) {
+		var that = this;
+		this.selelectTeam.remove("option");
+		teamData.find("team").each(function() {
+			that.selelectTeam.append($("<option></option>")
+											 .attr("value", $(this).text())
+											 .text($(this).text()));
+		});
 
-	genTime = (data.generatedTime * 1000);
+		this._trigger("change");
+	},
 
-	populateSprintCard(data);
+	// called when created, and later when changing options
+	_refresh: function() {
+		var that = this;
+		team_list(function(data) {
+			that._updateOptions(data);
+		});
 
-	var sprintGraph = makeSprintGraph(data);
-	$("#topSprintGraph").html(sprintGraph);
+	},
 
-	var $userStories = $("<div />");
-	for (var i in data.userStories) {
-		$userStories.append(makeUserStory(data.userStories[i]));
+	// events bound via _bind are removed automatically
+	// revert other modifications here
+	_destroy: function() {
+		// remove generated elements
+		this.selelectTeam.remove();
+		this.okButton.remove();
+
+		this.element
+				.removeClass("custom-team-list")
+				.enableSelection();
+	},
+
+	// _setOptions is called with a hash of all options that are changing
+	// always refresh when changing options
+	_setOptions: function() {
+		// in 1.9 would use _superApply
+		$.Widget.prototype._setOptions.apply(this, arguments);
+		this._refresh();
+	},
+
+	// _setOption is called for each individual option that is changing
+	_setOption: function(key, value) {
+		// in 1.9 would use _super
+		$.Widget.prototype._setOption.call(this, key, value);
+	}
+});
+
+
+// the widget definition, where "custom" is the namespace,
+// "colorize" the widget name
+$.widget("custom.sprintList", {
+	// default options
+	options: {
+		selelectSprint: null,
+		okButton: null,
+		newButton: null,
+		teamName: null,
+
+		// callbacks
+		change: null
+	},
+
+	// the constructor
+	_create: function() {
+		this.element
+			// add a class for theming
+				.addClass("custom-sprint-list")
+			// prevent double click to select text
+				.disableSelection();
+
+		this.selelectSprint = $("<select>", {"class": "custom-sprint-list-select"}).appendTo(this.element).select();
+		this.okButton = $("<button></button>", {"class": "custom-sprint-list-ok"}).appendTo(this.element).text("Ok").button();
+
+		// in 1.9 would use this._bind( this.changer, { change: "teamList" });
+		var that = this;
+		this.selelectSprint.bind("change.sprintList", function() {
+			// _bind would handle this check
+			if (that.options.disabled) {
+				return;
+			}
+		});
+
+		this.okButton.bind("click.sprintList", function(event) {
+			if (that.options.disabled) {
+				return;
+			}
+
+			that._trigger("selected", event, {"sprintName": that.selelectSprint.val(), "teamName": that.options.teamName});
+			return false;
+		});
+
+		this._refresh();
+	},
+
+	_updateOptions: function(teamData) {
+		var that = this;
+		this.selelectSprint.remove("option");
+		teamData.find("sprint").each(function() {
+			console.log(this);
+			that.selelectSprint.append($("<option></option>")
+											   .attr("value", $(this).find("sprintName").text())
+											   .text($(this).find("sprintName").text()))
+					;
+		});
+
+		this._trigger("change");
+	},
+
+	// called when created, and later when changing options
+	_refresh: function() {
+		if (this.options.teamName == null) {
+			return;
+		}
+
+		var that = this;
+		sprint_list(this.options.teamName, function(data) {
+			that._updateOptions(data);
+		});
+
+	},
+
+	// events bound via _bind are removed automatically
+	// revert other modifications here
+	_destroy: function() {
+		// remove generated elements
+		this.selelectTeam.remove();
+		this.okButton.remove();
+
+		this.element
+				.removeClass("custom-sprint-list")
+				.enableSelection();
+	},
+
+	// _setOptions is called with a hash of all options that are changing
+	// always refresh when changing options
+	_setOptions: function() {
+		// in 1.9 would use _superApply
+		$.Widget.prototype._setOptions.apply(this, arguments);
+		this._refresh();
+	},
+
+	// _setOption is called for each individual option that is changing
+	_setOption: function(key, value) {
+		// in 1.9 would use _super
+		$.Widget.prototype._setOption.call(this, key, value);
+	}
+});
+
+
+// ---------------------
+// -- Page Navigation --
+// ---------------------
+$(".navbar .nav a").click(function() {
+	$("div[role='main']").hide();
+	$(".navbar .nav li").removeClass("active");
+	$(this).parent().addClass("active");
+
+	var $pageDiv = $("div[role='main']" + $(this).attr('href'));
+	$pageDiv.show();
+
+	if ($pageDiv.data('onLoad')) {
+		window[$pageDiv.data('onLoad')]();
 	}
 
-	$("#storiesDash").html($userStories);
-	doBurnDown(data.dayGraph);
-	setTimeout("updateStories()", 2 * 60000);
-}
+	return false;
+});
+
+// Cheap way to select default page
+$("div[role='main']").hide();
+$(".navbar .nav a.default").click();

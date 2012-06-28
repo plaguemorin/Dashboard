@@ -13,8 +13,7 @@ import javax.annotation.PostConstruct;
  *         Time: 7:22 PM
  */
 @Component
-public class ApplicationBootstrap
-{
+public class ApplicationBootstrap {
 	@Autowired
 	private UserStoryProvider userStoryProvider;
 
@@ -22,8 +21,6 @@ public class ApplicationBootstrap
 	private SprintProvider sprintProvider;
 
 	@PostConstruct
-	public void init()
-	{
-
+	public void init() {
 	}
 }

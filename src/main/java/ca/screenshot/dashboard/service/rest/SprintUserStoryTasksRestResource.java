@@ -1,7 +1,5 @@
 package ca.screenshot.dashboard.service.rest;
 
-import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.entity.UserStory;
 import ca.screenshot.dashboard.entity.UserStoryTask;
 import ca.screenshot.dashboard.service.repositories.SprintRepository;
 import org.slf4j.Logger;
@@ -29,9 +27,7 @@ public class SprintUserStoryTasksRestResource {
 
 	@GET
 	public Collection<UserStoryTask> taskList(@PathParam("teamName") String teamName, @PathParam("sprintName") final String sprintName, @PathParam("userStoryGuid") String userStoryGuid) {
-		final Sprint sprint = this.sprintRepository.getSprintForTeam(teamName, sprintName);
-		final UserStory userStory = sprint.getUserStory(userStoryGuid);
-		return userStory.getTasks();
+		return this.sprintRepository.getTasksForUserStoryInSprint(teamName, sprintName, userStoryGuid);
 	}
 
 

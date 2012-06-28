@@ -5,6 +5,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import static java.util.UUID.randomUUID;
 
@@ -15,7 +16,7 @@ import static java.util.UUID.randomUUID;
  */
 @XmlRootElement
 @Entity
-public class UserStoryTask extends AbstractSourcedGeneratedLoggedObject {
+public class UserStoryTask extends AbstractValueObject {
 	@Id
 	private String guid;
 
@@ -42,7 +43,6 @@ public class UserStoryTask extends AbstractSourcedGeneratedLoggedObject {
 
 	public void updateWith(final UserStoryTask storyTask) {
 		super.updateWith(storyTask);
-		super.updateGenerators(storyTask);
 
 		this.title = storyTask.title;
 	}
@@ -55,11 +55,20 @@ public class UserStoryTask extends AbstractSourcedGeneratedLoggedObject {
 		this.secondsEstimated = minutesEstimated;
 	}
 
+	@XmlTransient
 	public UserStory getUserStory() {
 		return userStory;
 	}
 
 	public void setUserStory(UserStory userStory) {
 		this.userStory = userStory;
+	}
+
+	public String getGuid() {
+		return this.guid;
+	}
+
+	public void setGuid(final String guid) {
+		this.guid = guid;
 	}
 }

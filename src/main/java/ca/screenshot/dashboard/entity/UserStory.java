@@ -17,7 +17,7 @@ import static java.util.UUID.randomUUID;
 @XmlRootElement
 @XmlType(name = "UserStory")
 @Entity
-public class UserStory extends AbstractSourcedGeneratedObject {
+public class UserStory extends AbstractLoggedValueObject {
 	@Id
 	private String guid = randomUUID().toString();
 

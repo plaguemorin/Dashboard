@@ -2,8 +2,7 @@ package ca.screenshot.dashboard.entity;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,8 +19,7 @@ public abstract class AbstractLoggedValueObject extends AbstractValueObject impl
 	@OneToMany
 	private List<ActivityLog> logList = new ArrayList<>();
 
-	@XmlElementWrapper(name = "log")
-	@XmlElement(name = "item")
+	@XmlTransient
 	public Collection<ActivityLog> getActivityLog() {
 		return unmodifiableCollection(logList);
 	}

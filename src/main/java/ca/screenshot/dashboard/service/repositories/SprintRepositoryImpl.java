@@ -3,6 +3,7 @@ package ca.screenshot.dashboard.service.repositories;
 import ca.screenshot.dashboard.entity.Participant;
 import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.entity.UserStory;
+import ca.screenshot.dashboard.entity.UserStoryTask;
 import ca.screenshot.dashboard.service.providers.SprintProvider;
 import ca.screenshot.dashboard.service.providers.UserStoryProvider;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
@@ -84,6 +86,25 @@ public class SprintRepositoryImpl implements SprintRepository {
 	@Override
 	public Sprint getCurrentSprintForTeam(String teamName) {
 		return null;
+	}
+
+	@Override
+	@Transactional
+	public Collection<UserStoryTask> getTasksForUserStoryInSprint(String teamName, String sprintName, String userStoryGuid) {
+		final Collection<UserStoryTask> tasks = this.getSprintForTeam(teamName, sprintName).getUserStory(userStoryGuid).getTasks();
+		tasks.size();
+		return tasks;
+	}
+
+	@Override
+	public Sprint createNewSprintForTeamWithName(String teamName, String sprintName) {
+		final Sprint newSprint = new Sprint();
+		newSprint.setTeamName(teamName);
+		newSprint.setSprintName(sprintName);
+
+		this.entityManager.persist(newSprint);
+
+		return newSprint;
 	}
 
 }

@@ -183,9 +183,9 @@
 		</dependency>
 
 		<dependency>
-			<artifactId>persistence-api</artifactId>
-			<groupId>javax.persistence</groupId>
-			<version>1.0</version>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.0-api</artifactId>
+			<version>1.0.0.Final</version>
 		</dependency>
 
 		<dependency>
