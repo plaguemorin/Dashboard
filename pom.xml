@@ -22,40 +22,10 @@
 		<camel-core.version>2.9.1</camel-core.version>
 		<mysql-connector-java.version>5.1.19</mysql-connector-java.version>
 		<slf4j.version>1.6.4</slf4j.version>
+		<hibernate.version>3.5.4-Final</hibernate.version>
 	</properties>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>axistools-maven-plugin</artifactId>
-				<version>1.4</version>
-				<configuration>
-					<sourceDirectory>${basedir}/wsdl/</sourceDirectory>
-					<outputDirectory>${basedir}/target/generated-sources/wsdl2java</outputDirectory>
-					<packageSpace>ca.screenshot.dashboard.external</packageSpace>
-					<testCases>false</testCases>
-					<serverSide>false</serverSide>
-					<subPackageByFileName>true</subPackageByFileName>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>wsdl2java</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-
 	<dependencies>
-		<dependency>
-			<groupId>axis</groupId>
-			<artifactId>axis</artifactId>
-			<version>1.4</version>
-		</dependency>
-
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-orm</artifactId>
@@ -153,6 +123,12 @@
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
 			<version>1.4.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-entitymanager</artifactId>
+			<version>${hibernate.version}</version>
 		</dependency>
 
 		<dependency>
