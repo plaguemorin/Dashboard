@@ -11,7 +11,7 @@ import ca.screenshot.dashboard.external.jira.RemoteVersion;
 import ca.screenshot.dashboard.service.providers.ParticipantAugmenter;
 import ca.screenshot.dashboard.service.providers.SprintProvider;
 import ca.screenshot.dashboard.service.providers.UserStoryProvider;
-import ca.screenshot.dashboard.service.repositories.ParticipantRepository;
+import ca.screenshot.dashboard.service.repositories.ParticipantAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantAugmenter, Sp
 	private JiraConnector jiraConnector;
 
 	@Autowired
-	private ParticipantRepository participantRepository;
+	private ParticipantAPI participantAPI;
 
 	@Value("${jiraImporter.customFields.storyPoints}")
 	private String customFieldIdStoryPoints;
@@ -57,7 +57,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantAugmenter, Sp
 			userStory.addTask(this.convertToTask(subIssue));
 
 			if (subIssue.getAssignee() != null) {
-				userStory.addOrUpdateParticipant(this.participantRepository.findParticipantByUser(subIssue.getAssignee()));
+				userStory.addOrUpdateParticipant(this.participantAPI.findParticipantByUser(subIssue.getAssignee()));
 			}
 		}
 	}
@@ -96,7 +96,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantAugmenter, Sp
 		final UserStory us = new UserStory();
 
 		if (remoteIssue.getAssignee() != null) {
-			final Participant participant = this.participantRepository.findParticipantByUser(remoteIssue.getAssignee());
+			final Participant participant = this.participantAPI.findParticipantByUser(remoteIssue.getAssignee());
 			sprint.addOrUpdateParticipant(participant);
 			us.addOrUpdateParticipant(participant);
 		}
@@ -179,7 +179,7 @@ public class JiraProvider implements UserStoryProvider, ParticipantAugmenter, Sp
 				for (final RemoteIssue remoteIssue : issuesFromJqlSearch) {
 					LOGGER.info("Got Issue: [" + remoteIssue.getKey() + "] " + remoteIssue.getSummary());
 
-					theSprint.addOrUpdateUserStory(this.convertToUserStory(remoteIssue, theSprint));
+					theSprint.addUserStory(this.convertToUserStory(remoteIssue, theSprint));
 				}
 
 				return;

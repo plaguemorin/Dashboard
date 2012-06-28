@@ -2,7 +2,7 @@ package ca.screenshot.dashboard.service.rest;
 
 import ca.screenshot.dashboard.entity.Participant;
 import ca.screenshot.dashboard.entity.Role;
-import ca.screenshot.dashboard.service.repositories.SprintRepository;
+import ca.screenshot.dashboard.service.repositories.SprintAPI;
 import ca.screenshot.dashboard.service.rest.vo.ParticipantVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +28,11 @@ public class SprintParticipantRestResource {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SpecificTeamRestResource.class);
 
 	@Autowired
-	private SprintRepository sprintRepository;
+	private SprintAPI sprintAPI;
 
 	@GET
 	public Collection<ParticipantVO> getListOfParticipantsForSprint(@PathParam("teamName") final String teamName, @PathParam("sprintName") final String sprintName) {
-		final Map<Participant, Role> participants = this.sprintRepository.getSprintForTeam(teamName, sprintName).getParticipants();
+		final Map<Participant, Role> participants = this.sprintAPI.getSprintByKey(teamName, sprintName).getParticipants();
 		final List<ParticipantVO> vos = new ArrayList<>();
 
 		for (Map.Entry<Participant, Role> participantRoleEntry : participants.entrySet()) {

@@ -1,13 +1,12 @@
 package ca.screenshot.dashboard.entity;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.Date;
 
 /**
  */
 @MappedSuperclass
-public abstract class AbstractValueObject implements ValueObject, Serializable {
+public abstract class AbstractValueObject implements ValueObject {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date modifiedDate;
 

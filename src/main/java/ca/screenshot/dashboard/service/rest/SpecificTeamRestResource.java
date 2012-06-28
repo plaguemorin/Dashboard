@@ -1,7 +1,7 @@
 package ca.screenshot.dashboard.service.rest;
 
 import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.service.repositories.SprintRepository;
+import ca.screenshot.dashboard.service.repositories.SprintAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +22,11 @@ public class SpecificTeamRestResource {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SpecificTeamRestResource.class);
 
 	@Autowired
-	private SprintRepository sprintRepository;
+	private SprintAPI sprintAPI;
 
 	@GET
 	public List<Sprint> getTeamResource(@PathParam("teamName") final String teamName) {
-		return this.sprintRepository.getPossibleSprints(teamName);
+		return this.sprintAPI.getSprintsForTeam(teamName);
 	}
 
 }

@@ -1,7 +1,8 @@
 package ca.screenshot.dashboard.service.rest;
 
+import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.entity.UserStoryTask;
-import ca.screenshot.dashboard.service.repositories.SprintRepository;
+import ca.screenshot.dashboard.service.repositories.SprintAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +24,13 @@ public class SprintUserStoryTasksRestResource {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SprintUserStoryTasksRestResource.class);
 
 	@Autowired
-	private SprintRepository sprintRepository;
+	private SprintAPI sprintAPI;
 
 	@GET
 	public Collection<UserStoryTask> taskList(@PathParam("teamName") String teamName, @PathParam("sprintName") final String sprintName, @PathParam("userStoryGuid") String userStoryGuid) {
-		return this.sprintRepository.getTasksForUserStoryInSprint(teamName, sprintName, userStoryGuid);
+		final Sprint sprint = this.sprintAPI.getSprintByKey(teamName, sprintName);
+
+		return sprint.getUserStory(userStoryGuid).getTasks();
 	}
 
 

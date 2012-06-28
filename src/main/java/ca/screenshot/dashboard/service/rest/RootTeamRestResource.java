@@ -1,6 +1,6 @@
 package ca.screenshot.dashboard.service.rest;
 
-import ca.screenshot.dashboard.service.repositories.SprintRepository;
+import ca.screenshot.dashboard.service.repositories.SprintAPI;
 import ca.screenshot.dashboard.service.rest.vo.ListOfTeams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ import static java.util.Arrays.asList;
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 public class RootTeamRestResource {
 	@Autowired
-	private SprintRepository sprintProvider;
+	private SprintAPI sprintProvider;
 
 	@GET
 	public ListOfTeams getTeamNames() {

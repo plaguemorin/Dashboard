@@ -1,7 +1,7 @@
 package ca.screenshot.dashboard.service.repositories;
 
 import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.entity.UserStoryTask;
+import ca.screenshot.dashboard.entity.UserStory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -18,24 +18,27 @@ import java.util.List;
  *         16/05/12 9:00 PM
  */
 @Repository
-public class SprintRepositoryImpl implements SprintRepository {
-	private final static Logger LOGGER = LoggerFactory.getLogger(SprintRepositoryImpl.class);
+public class SprintAPIImpl implements SprintAPI {
+	private final static Logger LOGGER = LoggerFactory.getLogger(SprintAPIImpl.class);
 
 	@PersistenceContext
 	private EntityManager entityManager;
 
 	@Override
 	@Transactional
-	public Sprint getSprintForTeam(final String teamName, final String sprintName) {
+	public Sprint getSprintByKey(final String teamName, final String sprintKey) {
+		LOGGER.debug("Getting sprint keyed \"" + sprintKey + "\"");
+
 		final TypedQuery<Sprint> query = entityManager.createNamedQuery("Sprint.specificSprint", Sprint.class);
+		query.setParameter("sprintKey", sprintKey);
 		query.setParameter("teamName", teamName);
-		query.setParameter("sprintName", sprintName);
+
 		return query.getSingleResult();
 	}
 
 	@Override
 	@Transactional
-	public List<Sprint> getPossibleSprints(final String teamName) {
+	public List<Sprint> getSprintsForTeam(final String teamName) {
 		final TypedQuery<Sprint> sprints = entityManager.createNamedQuery("Sprint.allSprintForTeam", Sprint.class);
 		sprints.setParameter("teamName", teamName);
 		return sprints.getResultList();
@@ -48,25 +51,32 @@ public class SprintRepositoryImpl implements SprintRepository {
 
 	@Override
 	@Transactional
-	public Collection<UserStoryTask> getTasksForUserStoryInSprint(final String teamName, final String sprintName, final String userStoryGuid) {
-		final Collection<UserStoryTask> tasks = this.getSprintForTeam(teamName, sprintName).getUserStory(userStoryGuid).getTasks();
-		tasks.size();
-		return tasks;
-	}
-
-	@Override
-	public Sprint createNewSprintForTeamWithName(final String teamName, final String sprintName) {
+	public Sprint createNewSprintForTeam(final String teamName, final Date startDate) {
 		final Sprint newSprint = new Sprint();
 		newSprint.setTeamName(teamName);
-		newSprint.setSprintName(sprintName);
+		newSprint.setStartDate(startDate);
+
+		final List<Sprint> possibleSprints = this.getSprintsForTeam(teamName);
+		newSprint.setSprintKey("S" + (possibleSprints.size() + 1));
+
+		LOGGER.info("Created a new sprint for team \"" + teamName + "\" as key: " + newSprint.getSprintKey());
 
 		this.entityManager.persist(newSprint);
-
 		return newSprint;
 	}
 
 	@Override
+	@Transactional
 	public void saveSprint(final Sprint sprint) {
+		for (final UserStory userStory : sprint.getUserStories()) {
+			if (userStory.getGuid() != null) {
+				this.entityManager.merge(userStory);
+			} else {
+				this.entityManager.persist(userStory);
+			}
+		}
+
+
 		this.entityManager.merge(sprint);
 	}
 

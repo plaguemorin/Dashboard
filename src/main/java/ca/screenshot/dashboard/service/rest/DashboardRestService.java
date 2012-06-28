@@ -1,7 +1,7 @@
 package ca.screenshot.dashboard.service.rest;
 
 import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.service.repositories.SprintRepository;
+import ca.screenshot.dashboard.service.repositories.SprintAPI;
 import ca.screenshot.dashboard.service.rest.vo.Dashboard;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,15 +19,15 @@ import javax.ws.rs.PathParam;
 @Path("/teams/{teamName}/dashbaord")
 public class DashboardRestService {
 	@Autowired
-	private SprintRepository sprintRepository;
+	private SprintAPI sprintAPI;
 
 	@GET
 	public Dashboard getDashboardForTeam(@PathParam("teamName") final String teamName) {
 		final Dashboard dashboard = new Dashboard();
-		final Sprint theSprint = this.sprintRepository.getCurrentSprintForTeam(teamName);
+		final Sprint theSprint = this.sprintAPI.getCurrentSprintForTeam(teamName);
 
 		dashboard.setTeamName(theSprint.getTeamName());
-		dashboard.setSprintName(theSprint.getSprintName());
+		dashboard.setSprintName(theSprint.getSprintKey());
 
 		return dashboard;
 	}

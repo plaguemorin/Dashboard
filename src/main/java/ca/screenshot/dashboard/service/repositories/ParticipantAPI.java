@@ -7,6 +7,10 @@ import ca.screenshot.dashboard.entity.Participant;
  *         Date: 16/05/12
  *         Time: 7:03 PM
  */
-public interface ParticipantRepository {
+public interface ParticipantAPI {
 	Participant findParticipantByUser(final String participant);
+
+	Participant create(String userName);
+
+	void save(Participant participant);
 }

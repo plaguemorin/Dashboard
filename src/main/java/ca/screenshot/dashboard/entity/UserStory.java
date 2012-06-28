@@ -1,9 +1,7 @@
 package ca.screenshot.dashboard.entity;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -11,17 +9,19 @@ import java.util.List;
 
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.UUID.randomUUID;
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.EnumType.STRING;
 
 /**
  */
 @XmlRootElement
 @XmlType(name = "UserStory")
 @Entity
-public class UserStory extends AbstractLoggedValueObject {
+public class UserStory extends AbstractValueObject {
 	@Id
-	private String guid = randomUUID().toString();
+	private String guid = null;
 
-	@Enumerated(EnumType.STRING)
+	@Enumerated(STRING)
 	private UserStoryStatus storyStatus;
 
 	private String title;
@@ -29,13 +29,18 @@ public class UserStory extends AbstractLoggedValueObject {
 	@Column(length = 9000)
 	private String description;
 
-	@OneToMany(cascade = {CascadeType.PERSIST}, mappedBy = "userStory")
+	@OneToMany(cascade = {PERSIST}, mappedBy = "userStory")
 	private List<UserStoryTask> taskList = new ArrayList<>();
 
-	@ManyToMany
-	private List<Participant> participantList = new ArrayList<>();
+	@ManyToOne(optional = false)
+	private Sprint sprint;
 
-	private Long storyPoints;
+	private int storyPoints;
+
+	@PrePersist
+	public void prePersist() {
+		this.guid = randomUUID().toString();
+	}
 
 	public void setTitle(String title) {
 		this.title = title;
@@ -62,7 +67,9 @@ public class UserStory extends AbstractLoggedValueObject {
 
 	@XmlTransient
 	public Collection<Participant> getParticipants() {
-		return unmodifiableCollection(this.participantList);
+		final Collection<Participant> participants = new ArrayList<>();
+		// TODO: Fix me
+		return participants;
 	}
 
 	@XmlTransient
@@ -76,15 +83,6 @@ public class UserStory extends AbstractLoggedValueObject {
 			oldStoryTask.updateWith(storyTask);
 		} else {
 			this.taskList.add(storyTask);
-		}
-	}
-
-	public void addOrUpdateParticipant(final Participant participant) {
-		if (this.participantList.contains(participant)) {
-			final Participant oldParticipant = this.participantList.get(this.participantList.indexOf(participant));
-			oldParticipant.updateWith(participant);
-		} else {
-			this.participantList.add(participant);
 		}
 	}
 
@@ -103,17 +101,6 @@ public class UserStory extends AbstractLoggedValueObject {
 		this.title = userStory.title;
 		this.storyStatus = userStory.storyStatus;
 
-		for (final Participant participant : userStory.participantList) {
-			this.addOrUpdateParticipant(participant);
-		}
-
-		final Iterator<Participant> thisParticipantListIterator = this.participantList.iterator();
-		while (thisParticipantListIterator.hasNext()) {
-			if (!userStory.participantList.contains(thisParticipantListIterator.next())) {
-				thisParticipantListIterator.remove();
-			}
-		}
-
 		for (final UserStoryTask storyTask : userStory.taskList) {
 			this.addOrUpdateTask(storyTask);
 		}
@@ -126,14 +113,15 @@ public class UserStory extends AbstractLoggedValueObject {
 		}
 	}
 
-	public void setStoryPoints(Long storyPoints) {
+	public void setStoryPoints(int storyPoints) {
 		this.storyPoints = storyPoints;
 	}
 
-	public Long getStoryPoints() {
+	public int getStoryPoints() {
 		return storyPoints;
 	}
 
+	@XmlID
 	public String getGuid() {
 		return guid;
 	}
@@ -142,4 +130,13 @@ public class UserStory extends AbstractLoggedValueObject {
 		this.guid = guid;
 	}
 
+	@XmlIDREF
+	@XmlAttribute(name = "sprintId")
+	public Sprint getSprint() {
+		return sprint;
+	}
+
+	public void setSprint(Sprint sprints) {
+		this.sprint = sprints;
+	}
 }

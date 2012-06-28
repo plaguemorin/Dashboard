@@ -1,7 +1,7 @@
 package ca.screenshot.dashboard.entity;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 
 import static java.util.UUID.randomUUID;
 
@@ -22,6 +22,11 @@ public class ParticipantRole {
 	@Enumerated(EnumType.STRING)
 	private Role role;
 
+	@ManyToOne(optional = false)
+	private Sprint sprint;
+
+	@XmlIDREF
+	@XmlValue
 	public Participant getParticipant() {
 		return participant;
 	}
@@ -30,11 +35,21 @@ public class ParticipantRole {
 		this.participant = participant;
 	}
 
+	@XmlAttribute(name = "role")
 	public Role getRole() {
 		return role;
 	}
 
 	public void setRole(Role role) {
 		this.role = role;
+	}
+
+	@XmlTransient
+	public Sprint getSprint() {
+		return sprint;
+	}
+
+	public void setSprint(Sprint sprint) {
+		this.sprint = sprint;
 	}
 }
