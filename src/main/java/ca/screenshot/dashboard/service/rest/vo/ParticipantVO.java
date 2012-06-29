@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * Date: 28/06/12
  * Time: 10:47 AM
  */
-@XmlRootElement
+@XmlRootElement(name = "participantRole")
 public class ParticipantVO {
 	private Role role;
 	private Participant participant;

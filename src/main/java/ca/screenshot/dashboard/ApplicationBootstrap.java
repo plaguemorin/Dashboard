@@ -1,11 +1,7 @@
 package ca.screenshot.dashboard;
 
-import ca.screenshot.dashboard.entity.Participant;
-import ca.screenshot.dashboard.entity.Role;
-import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.entity.UserStory;
-import ca.screenshot.dashboard.service.repositories.ParticipantAPI;
-import ca.screenshot.dashboard.service.repositories.SprintAPI;
+import ca.screenshot.dashboard.entity.*;
+import ca.screenshot.dashboard.service.repositories.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +28,15 @@ public class ApplicationBootstrap {
 	@Autowired
 	private ParticipantAPI participantAPI;
 
+	@Autowired
+	private UserStoryAPI userStoryAPI;
+
+	@Autowired
+	private ProductAPI productAPI;
+
+	@Autowired
+	private MilestoneAPI milestoneAPI;
+
 	@PostConstruct
 	@Transactional(propagation = REQUIRES_NEW)
 	public void init() {
@@ -40,10 +45,19 @@ public class ApplicationBootstrap {
 
 		sprint.setWorkDays(10);
 
-		final UserStory userStory = new UserStory();
+		final Product product = productAPI.create("OMS");
+
+		final UserStory userStory = this.userStoryAPI.create(product);
 		userStory.setTitle("Update the inventory model");
 		userStory.setDescription("We need to update the inventory model to allow future inventory");
 		userStory.setStoryPoints(8);
+
+		final UserStoryTask task1 = new UserStoryTask();
+		task1.setTitle("Something");
+		userStory.addTask(task1);
+
+		this.userStoryAPI.save(userStory);
+
 		sprint.addUserStory(userStory);
 
 		final Participant me = participantAPI.create("philippe.lague-morin@hybris.com");

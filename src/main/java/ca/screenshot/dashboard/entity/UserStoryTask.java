@@ -2,10 +2,9 @@ package ca.screenshot.dashboard.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
+import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import static java.util.UUID.randomUUID;
 
@@ -23,8 +22,6 @@ public class UserStoryTask extends AbstractValueObject {
 	private String title;
 	private Long secondsEstimated;
 
-	@ManyToOne(optional = false)
-	private UserStory userStory;
 
 	@PrePersist
 	public void prePersist() {
@@ -42,7 +39,6 @@ public class UserStoryTask extends AbstractValueObject {
 	}
 
 	public void updateWith(final UserStoryTask storyTask) {
-		super.updateWith(storyTask);
 
 		this.title = storyTask.title;
 	}
@@ -55,15 +51,7 @@ public class UserStoryTask extends AbstractValueObject {
 		this.secondsEstimated = minutesEstimated;
 	}
 
-	@XmlTransient
-	public UserStory getUserStory() {
-		return userStory;
-	}
-
-	public void setUserStory(UserStory userStory) {
-		this.userStory = userStory;
-	}
-
+	@XmlID
 	public String getGuid() {
 		return this.guid;
 	}

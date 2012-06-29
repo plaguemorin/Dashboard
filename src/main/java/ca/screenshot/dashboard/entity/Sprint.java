@@ -7,7 +7,6 @@ import java.util.*;
 import static java.util.Collections.*;
 import static javax.persistence.CascadeType.ALL;
 
-
 /**
  * @author plaguemorin
  *         Date: 16/05/12
@@ -24,7 +23,7 @@ public class Sprint extends AbstractValueObject {
 	@EmbeddedId
 	private final SprintIdentity sprintIdentity = new SprintIdentity();
 
-	@OneToMany(mappedBy = "sprint")
+	@ManyToMany
 	private List<UserStory> userStoryList = new ArrayList<>();
 
 	@OneToMany(mappedBy = "sprint", cascade = ALL)
@@ -69,6 +68,7 @@ public class Sprint extends AbstractValueObject {
 	}
 
 	@XmlID
+	@XmlAttribute(name = "sprintId")
 	public String getSprintKey() {
 		return sprintIdentity.getSprintKey();
 	}
@@ -81,13 +81,13 @@ public class Sprint extends AbstractValueObject {
 		this.sprintIdentity.setTeamName(teamName);
 	}
 
+	@XmlAttribute(name = "teamId")
 	public String getTeamName() {
 		return this.sprintIdentity.getTeamName();
 	}
 
 	public void addUserStory(final UserStory userStory) {
 		userStoryList.add(userStory);
-		userStory.setSprint(this);
 	}
 
 	public void setEndDate(Date endDate) {
@@ -98,7 +98,8 @@ public class Sprint extends AbstractValueObject {
 		return endDate;
 	}
 
-	@XmlElementWrapper(name = "userStories")
+	@XmlElementWrapper(name = "stories")
+	@XmlElement(name = "story")
 	@XmlIDREF
 	public Collection<UserStory> getUserStories() {
 		return unmodifiableCollection(this.userStoryList);
@@ -142,9 +143,9 @@ public class Sprint extends AbstractValueObject {
 		this.participantList.add(participantRole);
 	}
 
-	public UserStory getUserStory(String userStoryGuid) {
+	public UserStory getUserStory(String userStoryKey) {
 		for (final UserStory userStory : userStoryList) {
-			if (userStoryGuid.equals(userStory.getGuid())) {
+			if (userStoryKey.equals(userStory.getStoryKey())) {
 				return userStory;
 			}
 		}

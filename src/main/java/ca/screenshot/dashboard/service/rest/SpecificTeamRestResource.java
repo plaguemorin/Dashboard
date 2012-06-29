@@ -2,6 +2,7 @@ package ca.screenshot.dashboard.service.rest;
 
 import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.service.repositories.SprintAPI;
+import ca.screenshot.dashboard.service.rest.vo.ListOfSprints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,11 @@ public class SpecificTeamRestResource {
 	private SprintAPI sprintAPI;
 
 	@GET
-	public List<Sprint> getTeamResource(@PathParam("teamName") final String teamName) {
-		return this.sprintAPI.getSprintsForTeam(teamName);
+	public ListOfSprints getTeamResource(@PathParam("teamName") final String teamName) {
+		final List<Sprint> sprints = this.sprintAPI.getSprintsForTeam(teamName);
+		final ListOfSprints vo = new ListOfSprints();
+		vo.setSprints(sprints);
+		return vo;
 	}
 
 }

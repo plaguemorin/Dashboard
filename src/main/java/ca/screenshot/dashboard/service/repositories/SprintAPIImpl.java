@@ -1,7 +1,6 @@
 package ca.screenshot.dashboard.service.repositories;
 
 import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.entity.UserStory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -68,15 +67,6 @@ public class SprintAPIImpl implements SprintAPI {
 	@Override
 	@Transactional
 	public void saveSprint(final Sprint sprint) {
-		for (final UserStory userStory : sprint.getUserStories()) {
-			if (userStory.getGuid() != null) {
-				this.entityManager.merge(userStory);
-			} else {
-				this.entityManager.persist(userStory);
-			}
-		}
-
-
 		this.entityManager.merge(sprint);
 	}
 

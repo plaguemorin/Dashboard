@@ -1,12 +1,14 @@
 package ca.screenshot.dashboard.service.rest;
 
 import ca.screenshot.dashboard.entity.Participant;
+import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.entity.UserStory;
 import ca.screenshot.dashboard.service.repositories.SprintAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,12 +29,17 @@ public class SprintUserStoryRestResource {
 	private SprintAPI sprintAPI;
 
 	@GET
+	@Transactional(readOnly = true)
 	public UserStory get(@PathParam("teamName") String teamName, @PathParam("sprintKey") final String sprintName, @PathParam("userStoryGuid") String userStoryGuid) {
-		return this.sprintAPI.getSprintByKey(teamName, sprintName).getUserStory(userStoryGuid);
+		final Sprint sprint = this.sprintAPI.getSprintByKey(teamName, sprintName);
+		final UserStory userStory = sprint.getUserStory(userStoryGuid);
+		userStory.getTasks().size();
+		return userStory;
 	}
 
 	@Path("/participants")
 	@GET
+	@Transactional(readOnly = true)
 	public Collection<Participant> getParticipantsForStory(@PathParam("teamName") String teamName, @PathParam("sprintName") final String sprintName, @PathParam("userStoryGuid") String userStoryGuid) {
 		final UserStory userStory = this.sprintAPI.getSprintByKey(teamName, sprintName).getUserStory(userStoryGuid);
 		return userStory.getParticipants();

@@ -2,6 +2,7 @@ package ca.screenshot.dashboard.service.rest;
 
 import ca.screenshot.dashboard.entity.UserStory;
 import ca.screenshot.dashboard.service.repositories.SprintAPI;
+import ca.screenshot.dashboard.service.rest.vo.UserStoriesList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,20 +21,22 @@ import java.util.Collection;
  */
 @Path("/teams/{teamName}/{sprintName}/userstories/")
 @Service
-public class SprintUserStoriesRestResource {
-	private static final Logger LOGGER = LoggerFactory.getLogger(SprintUserStoriesRestResource.class);
+public class UserStoriesRestResource {
+	private static final Logger LOGGER = LoggerFactory.getLogger(UserStoriesRestResource.class);
 
 	@Autowired
 	private SprintAPI sprintAPI;
 
 	@GET
 	@Transactional
-	public Collection<UserStory> getListOfUserStoriesForSprint(@PathParam("teamName") final String teamName, @PathParam("sprintName") final String sprintName) {
+	public UserStoriesList getListOfUserStoriesForSprint(@PathParam("teamName") final String teamName, @PathParam("sprintName") final String sprintName) {
 		final Collection<UserStory> userStories = this.sprintAPI.getSprintByKey(teamName, sprintName).getUserStories();
 
 		userStories.size();
+		final UserStoriesList ret = new UserStoriesList();
+		ret.setUserStories(userStories);
 
-		return userStories;
+		return ret;
 	}
 
 
