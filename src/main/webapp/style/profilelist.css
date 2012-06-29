@@ -1,0 +1,109 @@
+.profilelist {
+	background: #fff url(img/box-white-backg.png);
+	-moz-box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.2);
+	-webkit-box-shadow: 1px 1px 3px 0px rgba(149, 149, 149, 0.2);
+	box-shadow: 1px 1px 3px 0px rgba(149, 149, 149, 0.2);
+	position: relative;
+	margin-left: 10px;
+}
+
+.profilelist:before {
+	-webkit-box-shadow: 0 15px 10px rgba(0, 0, 0, 0.3);
+	-moz-box-shadow: 0 15px 10px rgba(0, 0, 0, 0.3);
+	box-shadow: 0 15px 10px rgba(0, 0, 0, 0.3);
+	-webkit-transform: rotate(-2deg);
+	-moz-transform: rotate(-2deg);
+	-o-transform: rotate(-2deg);
+	position: absolute;
+	left: 4px;
+	bottom: 16px;
+	z-index: -1;
+	width: 50%;
+	max-width: 300px;
+	height: 10%;
+	content: "";
+}
+
+.profilelist:after {
+	-webkit-box-shadow: 0 15px 10px rgba(0, 0, 0, 0.3);
+	-moz-box-shadow: 0 15px 10px rgba(0, 0, 0, 0.3);
+	box-shadow: 0 15px 10px rgba(0, 0, 0, 0.3);
+	-webkit-transform: rotate(2deg);
+	-moz-transform: rotate(2deg);
+	-o-transform: rotate(2deg);
+	position: absolute;
+	right: 4px;
+	bottom: 16px;
+	z-index: -1;
+	width: 50%;
+	max-width: 300px;
+	height: 10%;
+	content: "";
+}
+
+.profilelist p {
+	padding: 10px;
+}
+
+.profilelist header {
+	position: relative;
+	overflow: hidden;
+	margin: 0 40px 10px -10px;
+}
+
+.profilelist header div {
+	background: url(img/profilelist-header.png) repeat-x 0 -31px;
+	color: white;
+	font-size: 11px;
+	font-weight: bold;
+	height: 31px;
+	line-height: 32px;
+	margin: 0 12px;
+	padding: 0 5px 0 0;
+	text-shadow: #4392D7 0 1px 0;
+	font-variant: small-caps;
+}
+
+.profilelist header div:before {
+	background: url(img/profilelist-header.png) no-repeat 0 0;
+	height: 31px;
+	left: 0;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 12px;
+	content: " ";
+}
+
+.profilelist header div:after {
+	background: url(img/profilelist-header.png) no-repeat 0 -62px;
+	height: 31px;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 12px;
+	content: " ";
+}
+
+.profilelist-divider {
+	background: transparent url(img/profile_divider.png) scroll;
+	background-clip: border-box;
+	background-origin: padding-box;
+	background-size: auto;
+	color: #89B0C0;
+	display: block;
+	font-size: 12px;
+	height: 12px;
+	margin: 6px 0;
+	min-height: 0;
+	min-width: 0;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	padding: 0;
+	position: relative;
+	width: 395px;
+}

@@ -1,0 +1,20 @@
+HTML {
+	background: #e2f6fd;
+	height: 100%;
+}
+
+BODY {
+	background-image: url(img/maincontent_backg.png);
+	font: 14px/1.4em "Helvetica Neue", "Lucida Grande", Arial, sans-serif;
+	color: #89b0c0;
+	margin: 0;
+	padding: 0;
+	font-size: 12px;
+	height: 100%;
+	overflow: hidden;
+}
+
+div[role="main"]>div {
+	margin-left: 161px;
+	margin-top: 10px;
+}

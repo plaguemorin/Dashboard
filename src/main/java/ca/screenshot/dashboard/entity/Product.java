@@ -1,12 +1,9 @@
 package ca.screenshot.dashboard.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.persistence.*;
+import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,6 +13,10 @@ import java.util.List;
  */
 @Entity
 @XmlRootElement
+@NamedQueries({
+					  @NamedQuery(name = "Product.All", query = "SELECT a FROM Product a"),
+					  @NamedQuery(name = "Product.ByKey", query = "SELECT a FROM Product a WHERE a.productKey = :key")
+})
 public class Product extends AbstractValueObject {
 	@Id
 	private String productKey;
@@ -49,6 +50,14 @@ public class Product extends AbstractValueObject {
 		userStory.setProduct(this);
 	}
 
+	@XmlIDREF
+	@XmlElementWrapper(name = "stories")
+	@XmlElement(name = "story")
+	public Collection<UserStory> getUserStories() {
+		return this.userStories;
+	}
+
+	@XmlElement(name = "next-story-key")
 	public String getNextUserStoryKey() {
 		return this.getKey() + "-" + (this.userStories.size() + 1);
 	}

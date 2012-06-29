@@ -1,0 +1,76 @@
+div[role="main"] > header {
+	background-image: url(img/project_summary_backg2.png);
+	background-clip: border-box;
+	background-origin: padding-box;
+	background-size: auto;
+	color: #89B0C0;
+	display: block;
+	font-size: 12px;
+	margin: 0;
+	padding: 0;
+	position: relative;
+	height: 128px;
+}
+
+div[role="main"] > header .avatar-area {
+	background: transparent url(img/avatar_backg.png) scroll;
+	background-clip: border-box;
+	background-origin: padding-box;
+	background-size: auto;
+	color: #89B0C0;
+	display: block;
+	font-size: 12px;
+	height: 130px;
+	left: 16px;
+	margin: 0px;
+	padding: 0px;
+	position: absolute;
+	top: 14px;
+	width: 128px;
+}
+
+div[role="main"] > header .avatar-area img {
+	background-image: none;
+	border: 0 none #89B0C0;
+	color: #89B0C0;
+	display: block;
+	font-size: 10px;
+	height: 110px;
+	margin: 9px 0 0 9px;
+	padding: 0;
+	position: relative;
+	width: 110px;
+	z-index: 1;
+}
+
+div[role="main"] > header h1 {
+	background-image: none;
+	color: #354D4D;
+	display: block;
+	font-family: Georgia, serif;
+	font-size: 26px;
+	height: 34px;
+	left: 158px;
+	line-height: 32px;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	text-shadow: white 0 1px 0;
+	top: 21px;
+	width: 327px;
+}
+
+div[role="main"] > header .subtitle {
+	background-image: none;
+	color: #889696;
+	display: block;
+	font-size: 12px;
+	height: 15px;
+	left: 158px;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	text-shadow: white 0 1px 0;
+	top: 55px;
+	width: 161px;
+}

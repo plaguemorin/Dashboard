@@ -52,9 +52,7 @@ public class ApplicationBootstrap {
 		userStory.setDescription("We need to update the inventory model to allow future inventory");
 		userStory.setStoryPoints(8);
 
-		final UserStoryTask task1 = new UserStoryTask();
-		task1.setTitle("Something");
-		userStory.addTask(task1);
+		userStory.addTask("Investigation with Fred and do real estimates", 4 * 60 * 60);
 
 		this.userStoryAPI.save(userStory);
 

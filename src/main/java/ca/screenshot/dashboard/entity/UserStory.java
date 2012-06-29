@@ -50,6 +50,14 @@ public class UserStory extends AbstractValueObject {
 		this.description = (description == null || description.length() <= 9000) ? description : description.substring(0, 9000);
 	}
 
+	public UserStoryTask addTask(String title, long estimateSeconds) {
+		final UserStoryTask task = new UserStoryTask();
+		task.setTitle(title);
+		task.setSecondsEstimated(estimateSeconds);
+		this.addTask(task);
+		return task;
+	}
+
 	public void addTask(UserStoryTask userStoryTask) {
 		this.taskList.add(userStoryTask);
 		userStoryTask.setUserStory(this);

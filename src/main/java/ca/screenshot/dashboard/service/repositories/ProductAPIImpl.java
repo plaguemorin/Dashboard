@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import java.util.Collection;
 
 /**
  * User: plaguemorin
@@ -30,5 +32,20 @@ public class ProductAPIImpl implements ProductAPI {
 		this.entityManager.persist(product);
 
 		return product;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Collection<Product> listAll() {
+		final TypedQuery<Product> query = this.entityManager.createNamedQuery("Product.All", Product.class);
+		return query.getResultList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Product getByKey(String productId) {
+		final TypedQuery<Product> query = this.entityManager.createNamedQuery("Product.ByKey", Product.class);
+		query.setParameter("key", productId);
+		return query.getSingleResult();
 	}
 }

@@ -1,0 +1,4 @@
+div[role="main"]#overview_page > header {
+	background: transparent url(img/profile_header.png) scroll;
+	height: 96px;
+}
