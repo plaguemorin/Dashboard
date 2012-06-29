@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 /**
  * User: plaguemorin
@@ -38,5 +39,13 @@ public class UserStoryAPIImpl implements UserStoryAPI {
 	@Transactional
 	public void save(final UserStory userStory) {
 		this.entityManager.merge(userStory);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public UserStory getUserStoryByKey(String key) {
+		final TypedQuery<UserStory> query = this.entityManager.createNamedQuery("UserStories.ByKey", UserStory.class);
+		query.setParameter("key", key);
+		return query.getSingleResult();
 	}
 }

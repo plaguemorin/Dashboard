@@ -12,4 +12,6 @@ public interface UserStoryAPI {
 	UserStory create(final Product product);
 
 	void save(UserStory userStory);
+
+	UserStory getUserStoryByKey(String key);
 }

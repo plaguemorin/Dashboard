@@ -2,8 +2,11 @@ package ca.screenshot.dashboard.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import static java.util.UUID.randomUUID;
@@ -21,7 +24,11 @@ public class UserStoryTask extends AbstractValueObject {
 
 	private String title;
 	private Long secondsEstimated;
+	private Long secondsRemaining;
+	private Long secondsWorked;
 
+	@ManyToOne(optional = false)
+	private UserStory userStory;
 
 	@PrePersist
 	public void prePersist() {
@@ -36,11 +43,6 @@ public class UserStoryTask extends AbstractValueObject {
 
 	public String getTitle() {
 		return this.title;
-	}
-
-	public void updateWith(final UserStoryTask storyTask) {
-
-		this.title = storyTask.title;
 	}
 
 	public Long getSecondsEstimated() {
@@ -58,5 +60,31 @@ public class UserStoryTask extends AbstractValueObject {
 
 	public void setGuid(final String guid) {
 		this.guid = guid;
+	}
+
+	public Long getSecondsRemaining() {
+		return secondsRemaining;
+	}
+
+	public void setSecondsRemaining(Long secondsRemaining) {
+		this.secondsRemaining = secondsRemaining;
+	}
+
+	public Long getSecondsWorked() {
+		return secondsWorked;
+	}
+
+	public void setSecondsWorked(Long secondsWorked) {
+		this.secondsWorked = secondsWorked;
+	}
+
+	@XmlIDREF
+	@XmlAttribute(name = "storyId")
+	public UserStory getUserStory() {
+		return userStory;
+	}
+
+	public void setUserStory(UserStory userStory) {
+		this.userStory = userStory;
 	}
 }

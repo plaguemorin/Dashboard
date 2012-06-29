@@ -18,10 +18,10 @@ import java.util.Collection;
  *         Date: 29/05/12
  *         Time: 5:10 PM
  */
-@Path("/teams/{teamName}/{sprintName}/userstories/{userStoryGuid}/tasks")
+@Path("/teams/{teamName}/{sprintName}/tasks")
 @Service
-public class SprintUserStoryTasksRestResource {
-	private static final Logger LOGGER = LoggerFactory.getLogger(SprintUserStoryTasksRestResource.class);
+public class SprintTasksRestResource {
+	private static final Logger LOGGER = LoggerFactory.getLogger(SprintTasksRestResource.class);
 
 	@Autowired
 	private SprintAPI sprintAPI;
@@ -29,8 +29,9 @@ public class SprintUserStoryTasksRestResource {
 	@GET
 	public Collection<UserStoryTask> taskList(@PathParam("teamName") String teamName, @PathParam("sprintName") final String sprintName, @PathParam("userStoryGuid") String userStoryGuid) {
 		final Sprint sprint = this.sprintAPI.getSprintByKey(teamName, sprintName);
-
-		return sprint.getUserStory(userStoryGuid).getTasks();
+		final Collection<UserStoryTask> tasks = sprint.getUserStory(userStoryGuid).getTasks();
+		tasks.size();
+		return tasks;
 	}
 
 

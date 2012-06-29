@@ -16,7 +16,8 @@ import static javax.persistence.EnumType.STRING;
 @XmlType(name = "story")
 @Entity
 @NamedQueries({
-					  @NamedQuery(name = "UserStories.All", query = "SELECT a FROM UserStory a")
+					  @NamedQuery(name = "UserStories.All", query = "SELECT a FROM UserStory a"),
+					  @NamedQuery(name = "UserStories.ByKey", query = "SELECT a FROM UserStory a WHERE a.storyKey = :key")
 })
 public class UserStory extends AbstractValueObject {
 	@Id
@@ -30,7 +31,7 @@ public class UserStory extends AbstractValueObject {
 	@Column(length = 9000)
 	private String description;
 
-	@OneToMany(cascade = {ALL})
+	@OneToMany(cascade = {ALL}, mappedBy = "userStory")
 	private List<UserStoryTask> taskList = new ArrayList<>();
 
 	@ManyToOne(optional = false)
@@ -51,6 +52,7 @@ public class UserStory extends AbstractValueObject {
 
 	public void addTask(UserStoryTask userStoryTask) {
 		this.taskList.add(userStoryTask);
+		userStoryTask.setUserStory(this);
 	}
 
 	public Long getTotalEstimatedTime() {
