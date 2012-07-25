@@ -47,4 +47,11 @@ public interface SprintAPI {
 	Sprint createNewSprintForTeam(String teamName, Date startDate);
 
 	void saveSprint(final Sprint sprint);
+
+	/**
+	 * Update a remote
+	 *
+	 * @param sprint the sprint to update
+	 */
+	void updateRemote(Sprint sprint);
 }

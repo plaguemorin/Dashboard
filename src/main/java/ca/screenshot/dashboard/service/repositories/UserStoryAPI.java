@@ -20,4 +20,6 @@ public interface UserStoryAPI {
 	UserStory getUserStoryByKey(String key);
 
 	void remoteUpdate(UserStory story);
+
+	UserStory createRemote(Product product, String remoteReferenceUrl);
 }

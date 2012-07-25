@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,9 +28,16 @@ public class SpecificTeamRestResource {
 	private SprintAPI sprintAPI;
 
 	@GET
+	@Transactional(readOnly = true)
 	public Response getTeamResource(@PathParam("teamName") final String teamName) {
 		final List<Sprint> sprints = this.sprintAPI.getSprintsForTeam(teamName);
-		return Response.status(Response.Status.OK).entity(new GenericEntity<List<Sprint>>(sprints) {}).build();
+		for (final Sprint sprint : sprints) {
+			sprint.getRemoteReferences().size();
+			sprint.getParticipants();
+			sprint.getUserStories().size();
+		}
+		return Response.status(Response.Status.OK).entity(new GenericEntity<List<Sprint>>(sprints) {
+		}).build();
 	}
 
 }

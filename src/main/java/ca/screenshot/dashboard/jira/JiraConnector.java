@@ -129,6 +129,16 @@ public class JiraConnector {
 		}
 	}
 
+	public List<RemoteStatus> getRemoteStatus() {
+		this.setupConnection();
+		try {
+			return asList(this.jiraSoapService.getStatuses(this.authKey));
+		} catch (RemoteException e) {
+			LOGGER.error("Unable to execute remote getStatues on server \"" + this.jiraUrl + "\"", e);
+			throw new IllegalStateException("Remote exception caught", e);
+		}
+	}
+
 	public List<RemoteIssue> getChildIssues(final String parentId) {
 		return this.getIssuesFromJqlSearch("parent =\"" + parentId + "\"", 10000);
 	}

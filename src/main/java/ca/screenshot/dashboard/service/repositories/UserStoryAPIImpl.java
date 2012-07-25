@@ -113,6 +113,18 @@ public class UserStoryAPIImpl implements UserStoryAPI {
 		this.save(story);
 	}
 
+	@Override
+	@Transactional
+	public UserStory createRemote(Product product, String remoteReferenceUrl) {
+		final UserStory userStory = this.create(product);
+		final RemoteReference reference = userStory.addRemoteReference(remoteReferenceUrl);
+		reference.dirty();
+
+		this.remoteUpdate(userStory);
+
+		return userStory;
+	}
+
 	/**
 	 * Helper function
 	 *

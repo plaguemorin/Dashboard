@@ -170,5 +170,4 @@ public class UserStory extends AbstractValueObject {
 
 		return null;
 	}
-
 }

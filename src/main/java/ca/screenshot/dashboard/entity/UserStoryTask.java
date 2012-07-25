@@ -5,6 +5,7 @@ import javax.persistence.*;
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 
 import static java.util.Collections.unmodifiableCollection;
 import static javax.persistence.CascadeType.ALL;
@@ -24,9 +25,11 @@ public class UserStoryTask extends AbstractValueObject {
 	private Long secondsEstimated;
 	private Long secondsRemaining;
 
+	private Date doneDate;
+	private Date startDate;
+
 	@OneToMany(cascade = ALL, mappedBy = "userStoryTask")
 	private Collection<UserStoryTaskWork> workList = new ArrayList<>();
-
 	@ManyToOne(optional = false)
 	private UserStory userStory;
 
@@ -47,6 +50,7 @@ public class UserStoryTask extends AbstractValueObject {
 	}
 
 	@XmlID
+	@XmlAttribute(name = "userStoryTaskId")
 	public String getKey() {
 		return this.taskId.toString();
 	}
@@ -104,5 +108,29 @@ public class UserStoryTask extends AbstractValueObject {
 		taskWork.setWorkSeconds(i);
 
 		this.workList.add(taskWork);
+	}
+
+	public boolean isStarted() {
+		return this.startDate != null;
+	}
+
+	public boolean isDone() {
+		return this.doneDate != null;
+	}
+
+	public Date getStartDate() {
+		return startDate;
+	}
+
+	public void setStartDate(Date startDate) {
+		this.startDate = startDate;
+	}
+
+	public void setDoneDate(Date doneDate) {
+		this.doneDate = doneDate;
+	}
+
+	public Date getDoneDate() {
+		return doneDate;
 	}
 }

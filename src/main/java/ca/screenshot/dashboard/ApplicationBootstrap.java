@@ -1,6 +1,7 @@
 package ca.screenshot.dashboard;
 
-import ca.screenshot.dashboard.entity.*;
+import ca.screenshot.dashboard.entity.Product;
+import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.service.repositories.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +41,21 @@ public class ApplicationBootstrap {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void init() {
 		LOGGER.info("Application bootstrapping");
-		final Sprint sprint = sprintAPI.createNewSprintForTeam("CANADIENS", new GregorianCalendar(2012, 7, 9, 0, 0, 0).getTime());
+		final Product product = productAPI.create("OMS");
+		final Sprint sprint = sprintAPI.createNewSprintForTeam("CANADIENS", new GregorianCalendar(2012, 7, 23, 0, 0, 0).getTime());
 		sprint.setWorkDays(10);
+		sprint.addRemoteReference("jira-hybris:OMS%20Sprint%2010");
+		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-434"));
+		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-433"));
+		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-432"));
+		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-431"));
+		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-427"));
+		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-416"));
+		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-415"));
+		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-414"));
+
+		
+/*
 
 		final Product product = productAPI.create("OMS");
 		final Participant participant = participantAPI.create("philippe.lague-morin@hybris.com", "Philippe Lague-Morin", 6);
@@ -80,14 +94,15 @@ public class ApplicationBootstrap {
 		story65.addTask("Testing", 4 * 60 * 60);
 		story65.addTask("A new algorithm", 4 * 60 * 60);
 		final UserStoryTask task = story65.addTask("Service to get list of location in the DB", 4 * 60 * 60);
-
 		task.addWorkLog(participant, 600L);
+		task.setStartDate(new Date(new Date().getTime() - 1000));
+
 		this.userStoryAPI.save(story65);
 		sprint.addUserStory(story65);
 
-
 		sprint.addParticipant(participant, Role.SCRUMMASTER);
-
+*/
+		sprintAPI.updateRemote(sprint);
 		sprintAPI.saveSprint(sprint);
 		LOGGER.info("Application bootstrapping done");
 	}
