@@ -1,11 +1,12 @@
 package ca.screenshot.dashboard.entity;
 
 
-import javax.persistence.*;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.xml.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
+import java.util.*;
 
 import static java.util.Collections.unmodifiableCollection;
 import static javax.persistence.CascadeType.ALL;
@@ -27,13 +28,15 @@ public class UserStoryTask extends AbstractValueObject {
 
 	private Date doneDate;
 	private Date startDate;
+	private Date verifyDate;
 
 	@OneToMany(cascade = ALL, mappedBy = "userStoryTask")
 	private Collection<UserStoryTaskWork> workList = new ArrayList<>();
+
 	@ManyToOne(optional = false)
 	private UserStory userStory;
 
-	public void setTitle(String title) {
+	public void setTitle(final String title) {
 		this.title = title;
 	}
 
@@ -42,10 +45,10 @@ public class UserStoryTask extends AbstractValueObject {
 	}
 
 	public Long getSecondsEstimated() {
-		return secondsEstimated;
+		return this.secondsEstimated;
 	}
 
-	public void setSecondsEstimated(Long minutesEstimated) {
+	public void setSecondsEstimated(final Long minutesEstimated) {
 		this.secondsEstimated = minutesEstimated;
 	}
 
@@ -65,30 +68,30 @@ public class UserStoryTask extends AbstractValueObject {
 	}
 
 	public Long getSecondsRemaining() {
-		return secondsRemaining;
+		return this.secondsRemaining;
 	}
 
-	public void setSecondsRemaining(Long secondsRemaining) {
+	public void setSecondsRemaining(final Long secondsRemaining) {
 		this.secondsRemaining = secondsRemaining;
 	}
 
 	public Long getSecondsWorked() {
-		long i = 0;
+		long l = 0L;
 
 		for (final UserStoryTaskWork taskWork : this.workList) {
-			i += taskWork.getWorkSeconds();
+			l += taskWork.getWorkSeconds();
 		}
 
-		return i;
+		return l;
 	}
 
 	@XmlIDREF
 	@XmlAttribute(name = "storyId")
 	public UserStory getUserStory() {
-		return userStory;
+		return this.userStory;
 	}
 
-	public void setUserStory(UserStory userStory) {
+	public void setUserStory(final UserStory userStory) {
 		this.userStory = userStory;
 		this.taskId.setUserStory(this.userStory.getStoryKey());
 	}
@@ -97,40 +100,63 @@ public class UserStoryTask extends AbstractValueObject {
 	@XmlElementWrapper(name = "work")
 	@XmlElement(name = "log")
 	public Collection<UserStoryTaskWork> getWorkList() {
-		return unmodifiableCollection(workList);
+		return unmodifiableCollection(this.workList);
 	}
 
-	public void addWorkLog(final Participant participant, final Long i) {
+	public void addWorkLog(final Participant participant, final Long l) {
 		final UserStoryTaskWork taskWork = new UserStoryTaskWork();
 
 		taskWork.setParticipant(participant);
 		taskWork.setUserStoryTask(this);
-		taskWork.setWorkSeconds(i);
+		taskWork.setWorkSeconds(l);
 
 		this.workList.add(taskWork);
 	}
 
-	public boolean isStarted() {
-		return this.startDate != null;
-	}
+	public UserStoryStatus getStatus() {
+		if (this.doneDate != null)
+			return UserStoryStatus.DONE;
 
-	public boolean isDone() {
-		return this.doneDate != null;
+		if (this.verifyDate != null)
+			return UserStoryStatus.VERIFY;
+
+		if (this.startDate != null)
+			return UserStoryStatus.IN_PROGRESS;
+
+		return UserStoryStatus.TODO;
 	}
 
 	public Date getStartDate() {
-		return startDate;
+		return this.startDate;
 	}
 
-	public void setStartDate(Date startDate) {
+	public void setStartDate(final Date startDate) {
 		this.startDate = startDate;
 	}
 
-	public void setDoneDate(Date doneDate) {
+	public void setDoneDate(final Date doneDate) {
 		this.doneDate = doneDate;
 	}
 
 	public Date getDoneDate() {
-		return doneDate;
+		return this.doneDate;
+	}
+
+	public void setVerifyDate(final Date verifyDate) {
+		this.verifyDate = verifyDate;
+	}
+
+	public Date getVerifyDate() {
+		return this.verifyDate;
+	}
+
+	public Collection<Participant> getParticipants() {
+		final Collection<Participant> participants = new HashSet<>();
+
+		for (final UserStoryTaskWork work : this.workList) {
+			participants.add(work.getParticipant());
+		}
+
+		return participants;
 	}
 }

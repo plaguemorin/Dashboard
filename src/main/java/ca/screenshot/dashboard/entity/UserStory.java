@@ -4,6 +4,7 @@ import javax.persistence.*;
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableCollection;
@@ -18,15 +19,15 @@ import static java.util.Collections.unmodifiableCollection;
 					  @NamedQuery(name = "UserStories.ByKey", query = "SELECT a FROM UserStory a WHERE a.storyKey = :key")
 })
 public class UserStory extends AbstractValueObject {
+	private static final int DESCRIPTION_MAX_LENGTH = 9000;
+	
+
 	@Id
 	private String storyKey;
 
-	@Enumerated(EnumType.STRING)
-	private UserStoryStatus storyStatus;
-
 	private String title;
 
-	@Column(length = 9000)
+	@Column(length = DESCRIPTION_MAX_LENGTH)
 	private String description;
 
 	@OneToMany(cascade = {CascadeType.ALL}, mappedBy = "userStory")
@@ -40,12 +41,12 @@ public class UserStory extends AbstractValueObject {
 
 	private int storyPoints;
 
-	public void setTitle(String title) {
+	public void setTitle(final String title) {
 		this.title = title;
 	}
 
-	public void setDescription(String description) {
-		this.description = (description == null || description.length() <= 9000) ? description : description.substring(0, 9000);
+	public void setDescription(final String description) {
+		this.description = description == null || description.length() <= DESCRIPTION_MAX_LENGTH ? description : description.substring(0, DESCRIPTION_MAX_LENGTH);
 	}
 
 	/**
@@ -54,7 +55,7 @@ public class UserStory extends AbstractValueObject {
 	 * @param remoteReference URI representing the remote reference
 	 * @return the new userstory
 	 */
-	public UserStoryTask addTask(String remoteReference) {
+	public UserStoryTask addTask(final String remoteReference) {
 		final UserStoryTask task = new UserStoryTask();
 		task.addRemoteReference(remoteReference);
 		task.requestRemoteRefresh();
@@ -62,7 +63,7 @@ public class UserStory extends AbstractValueObject {
 		return task;
 	}
 
-	public UserStoryTask addTask(String title, long estimateSeconds) {
+	public UserStoryTask addTask(final String title, final long estimateSeconds) {
 		final UserStoryTask task = new UserStoryTask();
 		task.setTitle(title);
 		task.setSecondsEstimated(estimateSeconds);
@@ -70,7 +71,7 @@ public class UserStory extends AbstractValueObject {
 		return task;
 	}
 
-	public UserStoryTask addTask(String title, int estimatedSeconds, String remoteReference) {
+	public UserStoryTask addTask(final String title, final long estimatedSeconds, final String remoteReference) {
 		final UserStoryTask task = this.addTask(title, estimatedSeconds);
 
 		task.addRemoteReference(remoteReference);
@@ -78,25 +79,30 @@ public class UserStory extends AbstractValueObject {
 		return task;
 	}
 
-	public void addTask(UserStoryTask userStoryTask) {
+	public void addTask(final UserStoryTask userStoryTask) {
 		this.taskList.add(userStoryTask);
 		userStoryTask.setUserStory(this);
 		userStoryTask.setTaskId(String.valueOf(this.taskList.size()));
 	}
 
 	public Long getTotalEstimatedTime() {
-		long i = 0;
+		long l = 0L;
 
-		for (final UserStoryTask task : this.taskList)
-			i += task.getSecondsEstimated();
+		for (final UserStoryTask task : this.taskList) {
+			l += task.getSecondsEstimated();
+		}
 
-		return i;
+		return l;
 	}
 
 	@XmlTransient
 	public Collection<Participant> getParticipants() {
-		final Collection<Participant> participants = new ArrayList<>();
-		// TODO: Fix me
+		final Collection<Participant> participants = new HashSet<>();
+
+		for (final UserStoryTask task : this.taskList) {
+			participants.addAll(task.getParticipants());
+		}
+
 		return participants;
 	}
 
@@ -108,57 +114,49 @@ public class UserStory extends AbstractValueObject {
 	}
 
 	public String getTitle() {
-		return title;
+		return this.title;
 	}
 
 	public String getDescription() {
-		return description;
+		return this.description;
 	}
 
-	public void setStoryPoints(int storyPoints) {
+	public void setStoryPoints(final int storyPoints) {
 		this.storyPoints = storyPoints;
 	}
 
 	public int getStoryPoints() {
-		return storyPoints;
+		return this.storyPoints;
 	}
 
 	@XmlID
 	@XmlAttribute(name = "storyId")
 	public String getStoryKey() {
-		return storyKey;
+		return this.storyKey;
 	}
 
-	public void setStoryKey(String key) {
+	public void setStoryKey(final String key) {
 		this.storyKey = key;
 	}
 
 	@XmlIDREF
 	@XmlAttribute(name = "productId")
 	public Product getProduct() {
-		return product;
+		return this.product;
 	}
 
-	public void setProduct(Product product) {
+	public void setProduct(final Product product) {
 		this.product = product;
 	}
 
 	@XmlIDREF
 	@XmlAttribute(name = "milestoneId")
 	public Milestone getMilestone() {
-		return milestone;
+		return this.milestone;
 	}
 
-	public void setMilestone(Milestone milestone) {
+	public void setMilestone(final Milestone milestone) {
 		this.milestone = milestone;
-	}
-
-	public UserStoryStatus getStoryStatus() {
-		return storyStatus;
-	}
-
-	public void setStoryStatus(UserStoryStatus storyStatus) {
-		this.storyStatus = storyStatus;
 	}
 
 	public UserStoryTask getTask(final String taskId) {
@@ -168,6 +166,24 @@ public class UserStory extends AbstractValueObject {
 			}
 		}
 
-		return null;
+		throw new IllegalArgumentException("taskId referees to an invalid task");
+	}
+
+	public UserStoryStatus getCurrentStatus() {
+		int minWeight = UserStoryStatus.DONE.getWeight();
+
+		for (final UserStoryTask task : this.taskList) {
+			minWeight = Math.min(task.getStatus().getWeight(), minWeight);
+		}
+
+		return UserStoryStatus.fromWeight(minWeight);
+	}
+
+	@Override
+	public String toString() {
+		return "UserStory{" +
+					   "storyKey='" + this.storyKey + '\'' +
+					   ", title='" + this.title + '\'' +
+					   '}';
 	}
 }

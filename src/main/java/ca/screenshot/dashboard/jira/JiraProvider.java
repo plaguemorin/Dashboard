@@ -1,28 +1,23 @@
 package ca.screenshot.dashboard.jira;
 
-import ca.screenshot.dashboard.entity.RemoteReference;
-import ca.screenshot.dashboard.entity.Sprint;
-import ca.screenshot.dashboard.entity.UserStory;
-import ca.screenshot.dashboard.entity.UserStoryTask;
+import ca.screenshot.dashboard.entity.*;
 import ca.screenshot.dashboard.remote.jira.RemoteCustomFieldValue;
 import ca.screenshot.dashboard.remote.jira.RemoteIssue;
-import ca.screenshot.dashboard.remote.jira.RemoteStatus;
 import ca.screenshot.dashboard.service.provider.SprintProvider;
 import ca.screenshot.dashboard.service.provider.UserStoryProvider;
-import org.apache.axis.AxisFault;
+import ca.screenshot.dashboard.service.repositories.ParticipantAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author plaguemorin
@@ -33,7 +28,11 @@ import java.util.Map;
 public class JiraProvider implements UserStoryProvider, SprintProvider {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JiraProvider.class);
 
-	private JiraConnector jiraConnector;
+	@Autowired
+	private ParticipantAPI participantAPI;
+
+	private JiraSoapConnector jiraSoapConnector;
+	private JiraHttpConnector jiraHttpConnector;
 
 	@Value("${jira.customField.storyPoints}")
 	private String customFieldIdStoryPoints;
@@ -62,26 +61,28 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 	@Value("${jira.statusMap.inProgress}")
 	private String jiraStatusMapInProgress;
 
-	private Map<String, RemoteStatus> statusMap = new HashMap<>();
+	@Value("${jira.statusMap.testing}")
+	private String jiraStatusMapTesting;
 
 	@PostConstruct
-	public void init() throws AxisFault {
-		this.jiraConnector = new JiraConnector();
+	public void init() throws MalformedURLException {
+		this.jiraSoapConnector = new JiraSoapConnector();
+		this.jiraSoapConnector.setJiraUrl(new URL(this.jiraUrl.getProtocol(), this.jiraUrl.getHost(), this.jiraUrl.getPort(), "/rpc/soap/jirasoapservice-v2?wsdl"));
+		this.jiraSoapConnector.setUsername(this.jiraUsername);
+		this.jiraSoapConnector.setPassword(jiraPassword);
+		this.jiraSoapConnector.init();
 
-		this.jiraConnector.setJiraUrl(this.jiraUrl);
-		this.jiraConnector.setUsername(this.jiraUsername);
-		this.jiraConnector.setPassword(jiraPassword);
-
-		this.jiraConnector.init();
-
-		for (final RemoteStatus status : this.jiraConnector.getRemoteStatus()) {
-			this.statusMap.put(status.getId(), status);
-		}
+		this.jiraHttpConnector = new JiraHttpConnector();
+		this.jiraHttpConnector.setJiraUrl(new URL(this.jiraUrl.getProtocol(), this.jiraUrl.getHost(), this.jiraUrl.getPort(), "/sr/"));
+		this.jiraHttpConnector.setUsername(this.jiraUsername);
+		this.jiraHttpConnector.setPassword(jiraPassword);
+		this.jiraHttpConnector.init();
 	}
 
 	@PreDestroy
-	public void stop() throws RemoteException {
-		this.jiraConnector.destory();
+	public void stop() {
+		this.jiraSoapConnector.destroy();
+		this.jiraHttpConnector.destroy();
 	}
 
 	@Override
@@ -94,22 +95,22 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 			final RemoteReference reference = task.getRemoteReferenceForSystemId(this.getSystemId());
 			if (reference != null) {
 				currentTasks.add(reference.getRemoteId());
+			} else {
+				LOGGER.debug("Skipping {} as it has no remote reference for system id {}", task.getTaskId(), this.getSystemId());
 			}
 		}
 
-		final List<RemoteIssue> subIssues = this.jiraConnector.getChildIssues(remoteReference.getRemoteId());
+		final List<RemoteIssue> subIssues = this.jiraSoapConnector.getChildIssues(remoteReference.getRemoteId());
 		for (final RemoteIssue subIssue : subIssues) {
-			LOGGER.info("Got task: [" + subIssue.getKey() + "] " + subIssue.getSummary());
+			LOGGER.info("Got task: [{}] in status {}", new Object[]{subIssue.getKey(), subIssue.getSummary(), subIssue.getStatus()});
 			if (!currentTasks.contains(subIssue.getKey())) {
 				userStory.addTask(this.convertToTask(subIssue));
-			}
-
-			if (subIssue.getAssignee() != null) {
-				//userStory.addOrUpdateParticipant(this.participantAPI.findParticipantByUser(issue.getAssignee()));
+			} else {
+				LOGGER.debug("Task was not added since it was already in the list");
 			}
 		}
 
-		final RemoteIssue issue = this.jiraConnector.getIssue(remoteReference.getRemoteId());
+		final RemoteIssue issue = this.jiraSoapConnector.getIssue(remoteReference.getRemoteId());
 		userStory.setTitle(issue.getSummary());
 		userStory.setDescription(issue.getDescription());
 
@@ -126,13 +127,14 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 		final RemoteReference remoteReference = task.getRemoteReferenceForSystemId(this.getSystemId());
 		LOGGER.info("Update info for task " + remoteReference.getRemoteId());
 
-		populateUserStoryTaskFromIssue(task, this.jiraConnector.getIssue(remoteReference.getRemoteId()));
+		populateUserStoryTaskFromIssue(task, this.jiraSoapConnector.getIssue(remoteReference.getRemoteId()));
 
 		remoteReference.clean();
 	}
 
 	private UserStoryTask convertToTask(final RemoteIssue issue) {
 		final UserStoryTask task = new UserStoryTask();
+		LOGGER.debug("Converting issue {} to task", issue.getKey());
 
 		task.addRemoteReference(this.getSystemId(), issue.getKey());
 		populateUserStoryTaskFromIssue(task, issue);
@@ -145,12 +147,25 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 		task.setSecondsEstimated(this.extractEstimatedSeconds(issue.getCustomFieldValues()));
 		task.setSecondsRemaining(this.extractRemainingSeconds(issue.getCustomFieldValues()));
 
-		if (this.jiraStatusMapInProgress.equals(issue.getStatus()) && task.isStarted()) {
-			task.setStartDate(issue.getUpdated().getTime());
+		if (issue.getAssignee() != null) {
+			LOGGER.debug("Task is assigned to {}", issue.getAssignee());
+			final Participant participantByUser = this.participantAPI.findParticipantByUser(issue.getAssignee());
+			task.addWorkLog(participantByUser, 1L);
 		}
 
-		if (this.jiraStatusMapDone.equals(issue.getStatus()) && !task.isDone()) {
+		if (this.jiraStatusMapInProgress.equals(issue.getStatus()) && task.getStartDate() == null) {
+			task.setStartDate(issue.getUpdated().getTime());
+			LOGGER.debug("Issue was marked as in progress");
+		}
+
+		if (this.jiraStatusMapDone.equals(issue.getStatus()) && task.getDoneDate() == null) {
 			task.setDoneDate(issue.getUpdated().getTime());
+			LOGGER.debug("Issue was marked as done");
+		}
+
+		if (this.jiraStatusMapTesting.equals(issue.getStatus()) && task.getVerifyDate() == null) {
+			task.setVerifyDate(issue.getUpdated().getTime());
+			LOGGER.debug("Issue was marked as in testing");
 		}
 	}
 
@@ -181,7 +196,7 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 	@Override
 	public void refreshSprint(Sprint sprint) {
 		final RemoteReference jiraRelease = sprint.getRemoteReferenceForSystemId(this.getSystemId());
-		final List<RemoteIssue> issues = this.jiraConnector.getIssuesFromJqlSearch("fixVersion = \"" + jiraRelease.getRemoteId() + "\"", 9000);
+		final List<RemoteIssue> issues = this.jiraSoapConnector.getIssuesFromJqlSearch("fixVersion = \"" + jiraRelease.getRemoteId() + "\"", 9000);
 
 		for (final RemoteIssue issue : issues) {
 			boolean found = false;
@@ -205,4 +220,6 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 	public String getSystemId() {
 		return this.systemId;
 	}
+
+
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -27,9 +28,15 @@ public class ParticipantAPIImpl implements ParticipantAPI {
 	@Transactional
 	public Participant findParticipantByUser(final String participant) {
 		final TypedQuery<Participant> query = entityManager.createNamedQuery("Participant.findByUser", Participant.class);
+		LOGGER.debug("Querying for user {}", participant);
+
 		query.setParameter("user", participant.toLowerCase());
 
+		try {
 		return query.getSingleResult();
+		} catch (final NoResultException e) {
+			return this.create(participant);
+		}
 	}
 
 	@Override

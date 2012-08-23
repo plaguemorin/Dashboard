@@ -1,17 +1,16 @@
 package ca.screenshot.dashboard;
 
-import ca.screenshot.dashboard.entity.Product;
-import ca.screenshot.dashboard.entity.Sprint;
 import ca.screenshot.dashboard.service.repositories.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.util.GregorianCalendar;
 
 /**
  * @author plaguemorin
@@ -37,10 +36,14 @@ public class ApplicationBootstrap {
 	@Autowired
 	private MilestoneAPI milestoneAPI;
 
+	@Autowired
+	private JmsTemplate jmsTemplate;
+
 	@PostConstruct
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void init() {
 		LOGGER.info("Application bootstrapping");
+		/*
 		final Product product = productAPI.create("OMS");
 		final Sprint sprint = sprintAPI.createNewSprintForTeam("CANADIENS", new GregorianCalendar(2012, 7, 23, 0, 0, 0).getTime());
 		sprint.setWorkDays(10);
@@ -53,7 +56,7 @@ public class ApplicationBootstrap {
 		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-416"));
 		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-415"));
 		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-414"));
-
+*/
 		
 /*
 
@@ -102,8 +105,16 @@ public class ApplicationBootstrap {
 
 		sprint.addParticipant(participant, Role.SCRUMMASTER);
 */
+		/*
 		sprintAPI.updateRemote(sprint);
 		sprintAPI.saveSprint(sprint);
+		*/
 		LOGGER.info("Application bootstrapping done");
+	}
+
+	@Scheduled(fixedRate = 3000)
+	public void awesomeTest() {
+		LOGGER.info("Test");
+		//this.jmsTemplate.convertAndSend("Test !");
 	}
 }

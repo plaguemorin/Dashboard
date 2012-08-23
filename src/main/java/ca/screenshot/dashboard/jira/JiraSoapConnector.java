@@ -20,8 +20,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  *         Date: 16/05/12
  *         Time: 6:16 PM
  */
-public class JiraConnector {
-	private static final Logger LOGGER = LoggerFactory.getLogger(JiraConnector.class);
+public class JiraSoapConnector {
+	private static final Logger LOGGER = LoggerFactory.getLogger(JiraSoapConnector.class);
 
 	private URL jiraUrl;
 	private String username;
@@ -31,19 +31,28 @@ public class JiraConnector {
 	private JiraSoapService jiraSoapService;
 
 	@PostConstruct
-	public void init() throws AxisFault {
+	public void init() {
 		LOGGER.info("Using JIRA url: " + jiraUrl.toExternalForm());
 
-		this.jiraSoapService = new JirasoapserviceV2SoapBindingStub(this.jiraUrl, null);
+		try {
+			this.jiraSoapService = new JirasoapserviceV2SoapBindingStub(this.jiraUrl, null);
+		} catch (AxisFault axisFault) {
+			LOGGER.error("Unable to connecto to jira", axisFault);
+			throw new IllegalArgumentException("Unable to connect to JIRA", axisFault);
+		}
 
 		this.setupConnection();
 		LOGGER.info("Using auth-key: " + authKey);
 	}
 
 	@PreDestroy
-	public void destory() throws RemoteException {
+	public void destroy() {
 		if (this.authKey != null) {
-			this.jiraSoapService.logout(this.authKey);
+			try {
+				this.jiraSoapService.logout(this.authKey);
+			} catch (RemoteException e) {
+				LOGGER.warn("Unable to disconnect from JIRA", e);
+			}
 		}
 	}
 

@@ -1,11 +1,7 @@
 package ca.screenshot.dashboard.service.rest.vo;
 
-import ca.screenshot.dashboard.entity.UserStory;
-import ca.screenshot.dashboard.entity.UserStoryTask;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +19,12 @@ public class Dashboard {
 	private String teamName;
 	private String sprintName;
 	private List<SprintDay> dayList = EMPTY_LIST;
-	private List<UserStory> userStories = new ArrayList<>();
+	private List<DashboardStory> userStories = new ArrayList<>();
 	private int points = 0;
 	private String goals;
-	private List<UserStoryTask> endingSoonTasks = new ArrayList<>();
+	private List<DashboardTask> endingSoonTasks = new ArrayList<>();
+	private List<DashboardStory> verifyUserStories = new ArrayList<>();
+	private List<DashboardStory> readyToDemoStory = new ArrayList<>();
 
 	public void setTeamName(String teamName) {
 		this.teamName = teamName;
@@ -80,25 +78,44 @@ public class Dashboard {
 		return goals;
 	}
 
-	public void addUserStory(UserStory userStory) {
+	public void addUserStory(DashboardStory userStory) {
 		this.userStories.add(userStory);
 	}
 
 	@XmlElementWrapper(name = "userStories")
 	@XmlElement(name = "userStory")
-	@XmlIDREF
-	private List<UserStory> getUserStoryList_JAXB() {
+	private List<DashboardStory> getUserStoryList_JAXB() {
 		return this.userStories;
 	}
 
-	public void addEndingSoonTask(UserStoryTask task) {
+	public void addEndingSoonTask(DashboardTask task) {
 		this.endingSoonTasks.add(task);
 	}
 
 	@XmlElementWrapper(name = "endingSoonTasks")
 	@XmlElement(name = "tasks")
-	@XmlIDREF
-	private List<UserStoryTask> getEndingSoonTasks_JAXB() {
+	private List<DashboardTask> getEndingSoonTasks_JAXB() {
 		return this.endingSoonTasks;
 	}
+
+	public void addUserStoryToVerify(DashboardStory userStory) {
+		this.verifyUserStories.add(userStory);
+	}
+
+	@XmlElementWrapper(name = "verifyUserStories")
+	@XmlElement(name = "userStory")
+	private List<DashboardStory> getToVerifyUserStories_JAXB() {
+		return this.verifyUserStories;
+	}
+
+	public void addReadyToDemoStory(DashboardStory dashboardStory) {
+		this.readyToDemoStory.add(dashboardStory);
+	}
+
+	@XmlElementWrapper(name = "readyToDemoUserStories")
+	@XmlElement(name = "userStory")
+	private List<DashboardStory> getReadyToDemoUserStories_JAXB() {
+		return this.readyToDemoStory;
+	}
+
 }
