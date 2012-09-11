@@ -6,6 +6,7 @@ import ca.screenshot.dashboard.remote.jira.RemoteIssue;
 import ca.screenshot.dashboard.service.provider.SprintProvider;
 import ca.screenshot.dashboard.service.provider.UserStoryProvider;
 import ca.screenshot.dashboard.service.repositories.ParticipantAPI;
+import ca.screenshot.dashboard.service.repositories.SprintAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import javax.annotation.PreDestroy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -30,6 +32,9 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 
 	@Autowired
 	private ParticipantAPI participantAPI;
+
+	@Autowired
+	private SprintAPI sprintAPI;
 
 	private JiraSoapConnector jiraSoapConnector;
 	private JiraHttpConnector jiraHttpConnector;
@@ -69,13 +74,13 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 		this.jiraSoapConnector = new JiraSoapConnector();
 		this.jiraSoapConnector.setJiraUrl(new URL(this.jiraUrl.getProtocol(), this.jiraUrl.getHost(), this.jiraUrl.getPort(), "/rpc/soap/jirasoapservice-v2?wsdl"));
 		this.jiraSoapConnector.setUsername(this.jiraUsername);
-		this.jiraSoapConnector.setPassword(jiraPassword);
+		this.jiraSoapConnector.setPassword(this.jiraPassword);
 		this.jiraSoapConnector.init();
 
 		this.jiraHttpConnector = new JiraHttpConnector();
 		this.jiraHttpConnector.setJiraUrl(new URL(this.jiraUrl.getProtocol(), this.jiraUrl.getHost(), this.jiraUrl.getPort(), "/sr/"));
 		this.jiraHttpConnector.setUsername(this.jiraUsername);
-		this.jiraHttpConnector.setPassword(jiraPassword);
+		this.jiraHttpConnector.setPassword(this.jiraPassword);
 		this.jiraHttpConnector.init();
 	}
 
@@ -87,26 +92,26 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 
 	@Override
 	public void refreshUserStory(final UserStory userStory) {
-		final RemoteReference remoteReference = userStory.getRemoteReferenceForSystemId(this.getSystemId());
+		final RemoteReference remoteReference = userStory.getRemoteReferenceForSystemId(this.systemId);
 		LOGGER.info("Getting tasks for user story " + remoteReference.getRemoteId());
 
-		final List<String> currentTasks = new ArrayList<>();
+		final Collection<String> currentTasks = new ArrayList<>();
 		for (final UserStoryTask task : userStory.getTasks()) {
-			final RemoteReference reference = task.getRemoteReferenceForSystemId(this.getSystemId());
+			final RemoteReference reference = task.getRemoteReferenceForSystemId(this.systemId);
 			if (reference != null) {
 				currentTasks.add(reference.getRemoteId());
 			} else {
-				LOGGER.debug("Skipping {} as it has no remote reference for system id {}", task.getTaskId(), this.getSystemId());
+				LOGGER.debug("Skipping {} as it has no remote reference for system id {}", task.getTaskId(), this.systemId);
 			}
 		}
 
 		final List<RemoteIssue> subIssues = this.jiraSoapConnector.getChildIssues(remoteReference.getRemoteId());
 		for (final RemoteIssue subIssue : subIssues) {
 			LOGGER.info("Got task: [{}] in status {}", new Object[]{subIssue.getKey(), subIssue.getSummary(), subIssue.getStatus()});
-			if (!currentTasks.contains(subIssue.getKey())) {
-				userStory.addTask(this.convertToTask(subIssue));
-			} else {
+			if (currentTasks.contains(subIssue.getKey())) {
 				LOGGER.debug("Task was not added since it was already in the list");
+			} else {
+				userStory.addTask(this.convertToTask(subIssue));
 			}
 		}
 
@@ -124,7 +129,7 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 
 	@Override
 	public void refreshTask(final UserStoryTask task) {
-		final RemoteReference remoteReference = task.getRemoteReferenceForSystemId(this.getSystemId());
+		final RemoteReference remoteReference = task.getRemoteReferenceForSystemId(this.systemId);
 		LOGGER.info("Update info for task " + remoteReference.getRemoteId());
 
 		populateUserStoryTaskFromIssue(task, this.jiraSoapConnector.getIssue(remoteReference.getRemoteId()));
@@ -136,13 +141,13 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 		final UserStoryTask task = new UserStoryTask();
 		LOGGER.debug("Converting issue {} to task", issue.getKey());
 
-		task.addRemoteReference(this.getSystemId(), issue.getKey());
+		task.addRemoteReference(this.systemId, issue.getKey());
 		populateUserStoryTaskFromIssue(task, issue);
 
 		return task;
 	}
 
-	private void populateUserStoryTaskFromIssue(UserStoryTask task, RemoteIssue issue) {
+	private void populateUserStoryTaskFromIssue(final UserStoryTask task, final RemoteIssue issue) {
 		task.setTitle(issue.getSummary());
 		task.setSecondsEstimated(this.extractEstimatedSeconds(issue.getCustomFieldValues()));
 		task.setSecondsRemaining(this.extractRemainingSeconds(issue.getCustomFieldValues()));
@@ -169,13 +174,13 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 		}
 	}
 
-	private Long extractRemainingSeconds(RemoteCustomFieldValue[] customFieldValues) {
+	private Long extractRemainingSeconds(final RemoteCustomFieldValue[] customFieldValues) {
 		return 0L;
 	}
 
-	private Long extractEstimatedSeconds(RemoteCustomFieldValue[] customFieldValues) {
+	private Long extractEstimatedSeconds(final RemoteCustomFieldValue[] customFieldValues) {
 		for (final RemoteCustomFieldValue customFieldValue : customFieldValues) {
-			if (customFieldIdEstimatedSeconds.equals(customFieldValue.getCustomfieldId())) {
+			if (this.customFieldIdEstimatedSeconds.equals(customFieldValue.getCustomfieldId())) {
 				return Long.valueOf(customFieldValue.getValues()[0]);
 			}
 		}
@@ -183,9 +188,9 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 		return 0L;
 	}
 
-	private Long extractStoryPoints(RemoteCustomFieldValue[] customFieldValues) {
+	private Long extractStoryPoints(final RemoteCustomFieldValue[] customFieldValues) {
 		for (final RemoteCustomFieldValue customFieldValue : customFieldValues) {
-			if (customFieldIdStoryPoints.equals(customFieldValue.getCustomfieldId())) {
+			if (this.customFieldIdStoryPoints.equals(customFieldValue.getCustomfieldId())) {
 				return Long.valueOf(customFieldValue.getValues()[0]);
 			}
 		}
@@ -194,14 +199,14 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 	}
 
 	@Override
-	public void refreshSprint(Sprint sprint) {
-		final RemoteReference jiraRelease = sprint.getRemoteReferenceForSystemId(this.getSystemId());
+	public void refreshSprint(final Sprint sprint) {
+		final RemoteReference jiraRelease = sprint.getRemoteReferenceForSystemId(this.systemId);
 		final List<RemoteIssue> issues = this.jiraSoapConnector.getIssuesFromJqlSearch("fixVersion = \"" + jiraRelease.getRemoteId() + "\"", 9000);
 
 		for (final RemoteIssue issue : issues) {
 			boolean found = false;
 			for (final UserStory userStory : sprint.getUserStories()) {
-				final RemoteReference reference = userStory.getRemoteReferenceForSystemId(this.getSystemId());
+				final RemoteReference reference = userStory.getRemoteReferenceForSystemId(this.systemId);
 				if (reference != null && reference.getRemoteId().equals(issue.getKey())) {
 					found = true;
 					break;
@@ -212,7 +217,7 @@ public class JiraProvider implements UserStoryProvider, SprintProvider {
 	}
 
 	@Override
-	public void setSystemId(String systemId) {
+	public void setSystemId(final String systemId) {
 		this.systemId = systemId;
 	}
 

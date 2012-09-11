@@ -1,5 +1,8 @@
 package ca.screenshot.dashboard;
 
+import ca.screenshot.dashboard.entity.Product;
+import ca.screenshot.dashboard.entity.Sprint;
+import ca.screenshot.dashboard.entity.UserStory;
 import ca.screenshot.dashboard.service.repositories.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.util.GregorianCalendar;
 
 /**
  * @author plaguemorin
@@ -43,21 +47,17 @@ public class ApplicationBootstrap {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void init() {
 		LOGGER.info("Application bootstrapping");
-		/*
-		final Product product = productAPI.create("OMS");
-		final Sprint sprint = sprintAPI.createNewSprintForTeam("CANADIENS", new GregorianCalendar(2012, 7, 23, 0, 0, 0).getTime());
+
+		final Product product = this.productAPI.create("OMS");
+		final Sprint sprint = this.sprintAPI.createNewSprintForTeam("CANADIENS", new GregorianCalendar(2012, 7, 23, 0, 0, 0).getTime());
+		final UserStory userStory = this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-434");
+
 		sprint.setWorkDays(10);
 		sprint.addRemoteReference("jira-hybris:OMS%20Sprint%2010");
-		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-434"));
-		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-433"));
-		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-432"));
-		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-431"));
-		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-427"));
-		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-416"));
-		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-415"));
-		sprint.addUserStory(this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-414"));
-*/
-		
+
+		sprint.addAllUserStoryTasks(userStory.getTasks());
+
+
 /*
 
 		final Product product = productAPI.create("OMS");

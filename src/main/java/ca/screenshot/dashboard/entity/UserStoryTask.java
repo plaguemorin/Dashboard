@@ -1,17 +1,23 @@
 package ca.screenshot.dashboard.entity;
 
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import javax.xml.bind.annotation.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
 
 import static java.util.Collections.unmodifiableCollection;
 import static javax.persistence.CascadeType.ALL;
 
 /**
+ * A task on a user story
+ * <p>
+ * A task is the smallest unit of work to be done. This is created by the people
+ * what will be realising a user story. A task can only belong to a single user story.
+ * </p>
+ *
  * @author plaguemorin
  *         Date: 16/05/12
  *         Time: 7:27 PM
@@ -23,12 +29,22 @@ public class UserStoryTask extends AbstractValueObject {
 	private UserStoryTaskIdentifier taskId = new UserStoryTaskIdentifier();
 
 	private String title;
-	private Long secondsEstimated;
-	private Long secondsRemaining;
 
+	private Long secondsEstimated = 0L;
+
+	private Long secondsRemaining = 0L;
+
+	@Column(nullable = true)
 	private Date doneDate;
-	private Date startDate;
+
+	@Column(nullable = true)
 	private Date verifyDate;
+
+	@Column(nullable = true)
+	private Date startDate;
+
+	@ManyToOne(optional = true)
+	private Sprint sprint;
 
 	@OneToMany(cascade = ALL, mappedBy = "userStoryTask")
 	private Collection<UserStoryTaskWork> workList = new ArrayList<>();
@@ -114,40 +130,43 @@ public class UserStoryTask extends AbstractValueObject {
 	}
 
 	public UserStoryStatus getStatus() {
-		if (this.doneDate != null)
+		if (this.doneDate != null) {
 			return UserStoryStatus.DONE;
+		}
 
-		if (this.verifyDate != null)
+		if (this.verifyDate != null) {
 			return UserStoryStatus.VERIFY;
+		}
 
-		if (this.startDate != null)
+		if (this.startDate != null) {
 			return UserStoryStatus.IN_PROGRESS;
+		}
 
 		return UserStoryStatus.TODO;
 	}
 
-	public Date getStartDate() {
-		return this.startDate;
-	}
-
 	public void setStartDate(final Date startDate) {
-		this.startDate = startDate;
+		this.startDate = startDate != null ? (Date) startDate.clone() : null;
 	}
 
 	public void setDoneDate(final Date doneDate) {
-		this.doneDate = doneDate;
-	}
-
-	public Date getDoneDate() {
-		return this.doneDate;
+		this.doneDate = doneDate != null ? (Date) doneDate.clone() : null;
 	}
 
 	public void setVerifyDate(final Date verifyDate) {
-		this.verifyDate = verifyDate;
+		this.verifyDate = verifyDate != null ? (Date) verifyDate.clone() : null;
+	}
+
+	public Date getStartDate() {
+		return this.startDate != null ? (Date) this.startDate.clone() : null;
+	}
+
+	public Date getDoneDate() {
+		return this.doneDate != null ? (Date) this.doneDate.clone() : null;
 	}
 
 	public Date getVerifyDate() {
-		return this.verifyDate;
+		return this.verifyDate != null ? (Date) this.verifyDate.clone() : null;
 	}
 
 	public Collection<Participant> getParticipants() {
@@ -158,5 +177,14 @@ public class UserStoryTask extends AbstractValueObject {
 		}
 
 		return participants;
+	}
+
+	@XmlIDREF
+	public Sprint getSprint() {
+		return this.sprint;
+	}
+
+	public void setSprint(final Sprint sprint) {
+		this.sprint = sprint;
 	}
 }

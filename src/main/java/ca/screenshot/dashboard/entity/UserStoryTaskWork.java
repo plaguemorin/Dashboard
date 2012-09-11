@@ -5,13 +5,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import java.util.Date;
 
 import static java.util.UUID.randomUUID;
 import static javax.persistence.TemporalType.TIMESTAMP;
 
 /**
+ * Work done on a task
+ * <p/>
  * User: plaguemorin
  * Date: 13/07/12
  * Time: 5:58 PM
@@ -33,8 +34,11 @@ public class UserStoryTaskWork extends AbstractValueObject {
 
 	private Long workSeconds;
 
+	@Override
 	@PrePersist
 	public void prePersist() {
+		super.prePersist();
+
 		if (this.workLogId == null) {
 			this.workLogId = randomUUID().toString();
 		}
@@ -43,46 +47,46 @@ public class UserStoryTaskWork extends AbstractValueObject {
 	@XmlIDREF
 	@XmlAttribute(name = "taskId")
 	public UserStoryTask getUserStoryTask() {
-		return userStoryTask;
+		return this.userStoryTask;
 	}
 
-	public void setUserStoryTask(UserStoryTask userStoryTask) {
+	public void setUserStoryTask(final UserStoryTask userStoryTask) {
 		this.userStoryTask = userStoryTask;
 	}
 
 	@XmlIDREF
 	@XmlAttribute(name = "participantId")
 	public Participant getParticipant() {
-		return participant;
+		return this.participant;
 	}
 
-	public void setParticipant(Participant participant) {
+	public void setParticipant(final Participant participant) {
 		this.participant = participant;
 	}
 
 	@XmlID
 	@XmlAttribute(name = "workLogId")
 	public String getWorkLogId() {
-		return workLogId;
+		return this.workLogId;
 	}
 
-	public void setWorkLogId(String workLogId) {
+	public void setWorkLogId(final String workLogId) {
 		this.workLogId = workLogId;
 	}
 
 	public Date getLogDate() {
-		return logDate;
+		return (Date) this.logDate.clone();
 	}
 
-	public void setLogDate(Date when) {
-		this.logDate = when;
+	public void setLogDate(final Date when) {
+		this.logDate = when != null ? (Date) when.clone() : null;
 	}
 
 	public Long getWorkSeconds() {
-		return workSeconds;
+		return this.workSeconds;
 	}
 
-	public void setWorkSeconds(Long workSeconds) {
+	public void setWorkSeconds(final Long workSeconds) {
 		this.workSeconds = workSeconds;
 	}
 }

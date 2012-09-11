@@ -26,23 +26,23 @@ public class Dashboard {
 	private List<DashboardStory> verifyUserStories = new ArrayList<>();
 	private List<DashboardStory> readyToDemoStory = new ArrayList<>();
 
-	public void setTeamName(String teamName) {
+	public void setTeamName(final String teamName) {
 		this.teamName = teamName;
 	}
 
-	public void setSprintName(String sprintName) {
+	public void setSprintName(final String sprintName) {
 		this.sprintName = sprintName;
 	}
 
 	public String getTeamName() {
-		return teamName;
+		return this.teamName;
 	}
 
 	public String getSprintName() {
-		return sprintName;
+		return this.sprintName;
 	}
 
-	public void setSprintLength(int days) {
+	public void setSprintLength(final int days) {
 		final List<SprintDay> newSprint = new ArrayList<>(days);
 
 		// Oh nice
@@ -59,26 +59,26 @@ public class Dashboard {
 	@XmlElementWrapper(name = "days")
 	@XmlElement(name = "day")
 	public List<SprintDay> getDayList() {
-		return unmodifiableList(dayList);
+		return unmodifiableList(this.dayList);
 	}
 
 	public int getPoints() {
-		return points;
+		return this.points;
 	}
 
-	public void setPoints(int points) {
+	public void setPoints(final int points) {
 		this.points = points;
 	}
 
-	public void setGoals(String goals) {
+	public void setGoals(final String goals) {
 		this.goals = goals;
 	}
 
 	public String getGoals() {
-		return goals;
+		return this.goals;
 	}
 
-	public void addUserStory(DashboardStory userStory) {
+	public void addUserStory(final DashboardStory userStory) {
 		this.userStories.add(userStory);
 	}
 
@@ -88,7 +88,7 @@ public class Dashboard {
 		return this.userStories;
 	}
 
-	public void addEndingSoonTask(DashboardTask task) {
+	public void addEndingSoonTask(final DashboardTask task) {
 		this.endingSoonTasks.add(task);
 	}
 
@@ -98,7 +98,7 @@ public class Dashboard {
 		return this.endingSoonTasks;
 	}
 
-	public void addUserStoryToVerify(DashboardStory userStory) {
+	public void addUserStoryToVerify(final DashboardStory userStory) {
 		this.verifyUserStories.add(userStory);
 	}
 
@@ -108,7 +108,7 @@ public class Dashboard {
 		return this.verifyUserStories;
 	}
 
-	public void addReadyToDemoStory(DashboardStory dashboardStory) {
+	public void addReadyToDemoStory(final DashboardStory dashboardStory) {
 		this.readyToDemoStory.add(dashboardStory);
 	}
 

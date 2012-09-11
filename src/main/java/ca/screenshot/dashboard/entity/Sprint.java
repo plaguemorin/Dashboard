@@ -4,7 +4,8 @@ import javax.persistence.*;
 import javax.xml.bind.annotation.*;
 import java.util.*;
 
-import static java.util.Collections.*;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * @author plaguemorin
@@ -17,8 +18,8 @@ public class Sprint extends AbstractValueObject {
 	@EmbeddedId
 	private final SprintIdentity sprintIdentity = new SprintIdentity();
 
-	@ManyToMany
-	private List<UserStory> userStoryList = new ArrayList<>();
+	@OneToMany(mappedBy = "sprint")
+	private List<UserStoryTask> userStoryTaskList = new ArrayList<>();
 
 	@OneToMany(mappedBy = "sprint", cascade = CascadeType.ALL)
 	private List<ParticipantRole> participantList = new ArrayList<>();
@@ -38,40 +39,40 @@ public class Sprint extends AbstractValueObject {
 	private String goals;
 
 	public Date getStartDate() {
-		return startDate;
+		return this.startDate;
 	}
 
-	public void setStartDate(Date startDate) {
+	public void setStartDate(final Date startDate) {
 		this.startDate = startDate;
 	}
 
 	public Integer getWorkDays() {
-		return workDays;
+		return this.workDays;
 	}
 
-	public void setWorkDays(Integer workDays) {
+	public void setWorkDays(final Integer workDays) {
 		this.workDays = workDays;
 	}
 
 	public String getGoals() {
-		return goals;
+		return this.goals;
 	}
 
-	public void setGoals(String goals) {
+	public void setGoals(final String goals) {
 		this.goals = goals;
 	}
 
 	@XmlID
 	@XmlAttribute(name = "sprintId")
 	public String getSprintKey() {
-		return sprintIdentity.getSprintKey();
+		return this.sprintIdentity.getSprintKey();
 	}
 
-	public void setSprintKey(String sprintKey) {
+	public void setSprintKey(final String sprintKey) {
 		this.sprintIdentity.setSprintKey(sprintKey);
 	}
 
-	public void setTeamName(String teamName) {
+	public void setTeamName(final String teamName) {
 		this.sprintIdentity.setTeamName(teamName);
 	}
 
@@ -80,23 +81,26 @@ public class Sprint extends AbstractValueObject {
 		return this.sprintIdentity.getTeamName();
 	}
 
-	public void addUserStory(final UserStory userStory) {
-		userStoryList.add(userStory);
-	}
-
-	public void setEndDate(Date endDate) {
+	public void setEndDate(final Date endDate) {
 		this.endDate = endDate;
 	}
 
 	public Date getEndDate() {
-		return endDate;
+		return this.endDate;
 	}
 
 	@XmlElementWrapper(name = "stories")
 	@XmlElement(name = "story")
 	@XmlIDREF
 	public Collection<UserStory> getUserStories() {
-		return unmodifiableCollection(this.userStoryList);
+		final List<UserStory> list = new ArrayList<>();
+		for (final UserStoryTask task : this.userStoryTaskList) {
+			if (!list.contains(task.getUserStory())) {
+				list.add(task.getUserStory());
+			}
+		}
+
+		return unmodifiableList(list);
 	}
 
 	@XmlTransient
@@ -137,14 +141,18 @@ public class Sprint extends AbstractValueObject {
 		this.participantList.add(participantRole);
 	}
 
-	public UserStory getUserStory(String userStoryKey) {
-		for (final UserStory userStory : userStoryList) {
-			if (userStoryKey.equals(userStory.getStoryKey())) {
-				return userStory;
-			}
-		}
-
-		return null;
+	@XmlIDREF
+	@XmlElementWrapper(name = "tasks")
+	@XmlElement(name = "task")
+	public List<UserStoryTask> getUserStoryTask() {
+		return unmodifiableList(this.userStoryTaskList);
 	}
 
+	public void addUserStoryTask(final UserStoryTask task) {
+		this.userStoryTaskList.add(task);
+	}
+
+	public void addAllUserStoryTasks(final Collection<? extends UserStoryTask> tasks) {
+		this.userStoryTaskList.addAll(tasks);
+	}
 }

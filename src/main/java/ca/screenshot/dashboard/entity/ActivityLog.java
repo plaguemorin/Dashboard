@@ -25,8 +25,11 @@ public class ActivityLog extends AbstractValueObject {
 
 	private String what;
 
+	@Override
 	@PrePersist
 	public void prePersist() {
+		super.prePersist();
+
 		if (this.guid == null) {
 			this.guid = randomUUID().toString();
 		}
