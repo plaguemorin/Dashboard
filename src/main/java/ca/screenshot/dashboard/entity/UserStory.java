@@ -20,7 +20,6 @@ import static java.util.Collections.unmodifiableCollection;
 })
 public class UserStory extends AbstractValueObject {
 	private static final int DESCRIPTION_MAX_LENGTH = 9000;
-	
 
 	@Id
 	private String storyKey;
@@ -177,6 +176,14 @@ public class UserStory extends AbstractValueObject {
 		}
 
 		return UserStoryStatus.fromWeight(minWeight);
+	}
+
+	public boolean isDemoable() {
+		return getCurrentStatus() == UserStoryStatus.DONE;
+	}
+
+	public boolean isVerfiable() {
+		return getCurrentStatus() == UserStoryStatus.VERIFY;
 	}
 
 	@Override

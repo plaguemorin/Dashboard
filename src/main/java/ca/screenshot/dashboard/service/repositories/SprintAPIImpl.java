@@ -34,9 +34,9 @@ public class SprintAPIImpl implements SprintAPI {
 	@Override
 	@Transactional
 	public Sprint getSprintByKey(final String teamName, final String sprintKey) {
-		LOGGER.debug("Getting sprint keyed \"" + sprintKey + "\"");
+		LOGGER.debug("Getting sprint keyed \"" + sprintKey + '"');
 
-		final TypedQuery<Sprint> query = entityManager.createQuery("SELECT a from Sprint a WHERE a.sprintIdentity.sprintKey = :sprintKey AND a.sprintIdentity.teamName = :teamName", Sprint.class);
+		final TypedQuery<Sprint> query = this.entityManager.createQuery("SELECT a from Sprint a WHERE a.sprintIdentity.sprintKey = :sprintKey AND a.sprintIdentity.teamName = :teamName", Sprint.class);
 		query.setParameter("sprintKey", sprintKey);
 		query.setParameter("teamName", teamName);
 
@@ -46,7 +46,7 @@ public class SprintAPIImpl implements SprintAPI {
 	@Override
 	@Transactional
 	public List<Sprint> getSprintsForTeam(final String teamName) {
-		final TypedQuery<Sprint> sprints = entityManager.createQuery("SELECT a FROM Sprint a WHERE a.sprintIdentity.teamName = :teamName", Sprint.class);
+		final TypedQuery<Sprint> sprints = this.entityManager.createQuery("SELECT a FROM Sprint a WHERE a.sprintIdentity.teamName = :teamName", Sprint.class);
 		sprints.setParameter("teamName", teamName);
 		return sprints.getResultList();
 	}

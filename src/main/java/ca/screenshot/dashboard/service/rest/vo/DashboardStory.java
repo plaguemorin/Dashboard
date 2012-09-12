@@ -24,7 +24,7 @@ public class DashboardStory {
 	public static DashboardStory fromUserStory(UserStory userStory) {
 		final DashboardStory me = new DashboardStory();
 
-		me.setTitle(userStory.getTitle());
+		me.title = userStory.getTitle();
 		for (final UserStoryTask task : userStory.getTasks()) {
 			for (final UserStoryTaskWork taskWork : task.getWorkList()) {
 				final String user = taskWork.getParticipant().getUser();

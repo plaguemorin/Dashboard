@@ -116,7 +116,7 @@ public class Sprint extends AbstractValueObject {
 
 	@XmlElementWrapper(name = "participants")
 	@XmlElement(name = "participant")
-	private List<ParticipantRole> getParticipants_() {
+	private List<ParticipantRole> getParticipants_JAXB() {
 		return this.participantList;
 	}
 

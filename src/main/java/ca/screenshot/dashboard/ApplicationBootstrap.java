@@ -49,14 +49,14 @@ public class ApplicationBootstrap {
 		LOGGER.info("Application bootstrapping");
 
 		final Product product = this.productAPI.create("OMS");
-		final Sprint sprint = this.sprintAPI.createNewSprintForTeam("CANADIENS", new GregorianCalendar(2012, 7, 23, 0, 0, 0).getTime());
-		final UserStory userStory = this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-434");
+		final Sprint sprint = this.sprintAPI.createNewSprintForTeam("CANADIENS", new GregorianCalendar(2012, 9, 10, 0, 0, 0).getTime());
+		final UserStory userStory = this.userStoryAPI.createRemote(product, "jira-hybris:CANADIENS-518");
 
 		sprint.setWorkDays(10);
-		sprint.addRemoteReference("jira-hybris:OMS%20Sprint%2010");
-
+		sprint.addRemoteReference("jira-hybris:OMS%20Sprint%2013");
 		sprint.addAllUserStoryTasks(userStory.getTasks());
 
+		this.sprintAPI.saveSprint(sprint);
 
 /*
 

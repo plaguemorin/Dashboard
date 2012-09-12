@@ -26,7 +26,8 @@ import java.util.Date;
 @Service
 @Path("/teams/{teamName}/dashboard")
 public class DashboardRestService {
-	private final static Logger LOGGER = LoggerFactory.getLogger(DashboardRestService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DashboardRestService.class);
+	private static final int A_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 100;
 
 	@Autowired
 	private SprintAPI sprintAPI;
@@ -41,6 +42,10 @@ public class DashboardRestService {
 		dashboard.setTeamName(theSprint.getTeamName());
 		dashboard.setSprintName(theSprint.getSprintKey());
 
+		for (final UserStoryTask task : theSprint.getUserStoryTask()) {
+			processTask(dashboard, now, task);
+		}
+
 		for (final UserStory userStory : theSprint.getUserStories()) {
 			processUserStory(dashboard, now, userStory);
 		}
@@ -50,36 +55,29 @@ public class DashboardRestService {
 		return dashboard;
 	}
 
-	private void processUserStory(Dashboard dashboard, Date now, UserStory userStory) {
-		for (final UserStoryTask task : userStory.getTasks()) {
-			processTask(dashboard, now, task);
+	private void processUserStory(final Dashboard dashboard, final Date now, final UserStory userStory) {
+		if (userStory.isDemoable()) {
+			dashboard.addReadyToDemoStory(DashboardStory.fromUserStory(userStory));
 		}
 
-		switch (userStory.getCurrentStatus()) {
-			case IN_PROGRESS:
-				break;
-			case DONE:
-				dashboard.addReadyToDemoStory(DashboardStory.fromUserStory(userStory));
-				break;
-			case VERIFY:
-				dashboard.addUserStoryToVerify(DashboardStory.fromUserStory(userStory));
-				break;
-			case TODO:
-				break;
+		if (userStory.isVerfiable()) {
+			dashboard.addUserStoryToVerify(DashboardStory.fromUserStory(userStory));
 		}
 
-		dashboard.addUserStory(DashboardStory.fromUserStory(userStory));
 		dashboard.setPoints(dashboard.getPoints() + userStory.getStoryPoints());
 	}
 
-	private void processTask(Dashboard dashboard, Date now, UserStoryTask task) {
+	private void processTask(final Dashboard dashboard, final Date now, final UserStoryTask task) {
 		// What should finish today ?
 		if (task.getStartDate() != null) {
-			final Date shouldEndDate = new Date(task.getStartDate().getTime() + task.getSecondsEstimated() + (24 * 60 * 60 * 100));
+			final Date shouldEndDate = new Date(task.getStartDate().getTime() + task.getSecondsEstimated() + A_DAY_IN_MILLISECONDS);
 			if (shouldEndDate.after(now)) {
 				LOGGER.info("Task " + task.getKey() + " should end soon");
 				dashboard.addEndingSoonTask(DashboardTask.fromTask(task));
 			}
 		}
+
+		// Part of sprint
+		dashboard.addTaskPartOfSprint(DashboardTask.fromTask(task));
 	}
 }

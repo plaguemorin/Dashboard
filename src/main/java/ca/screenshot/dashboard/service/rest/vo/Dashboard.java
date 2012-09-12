@@ -19,9 +19,9 @@ public class Dashboard {
 	private String teamName;
 	private String sprintName;
 	private List<SprintDay> dayList = EMPTY_LIST;
-	private List<DashboardStory> userStories = new ArrayList<>();
 	private int points = 0;
 	private String goals;
+	private List<DashboardTask> tasks = new ArrayList<>();
 	private List<DashboardTask> endingSoonTasks = new ArrayList<>();
 	private List<DashboardStory> verifyUserStories = new ArrayList<>();
 	private List<DashboardStory> readyToDemoStory = new ArrayList<>();
@@ -78,16 +78,6 @@ public class Dashboard {
 		return this.goals;
 	}
 
-	public void addUserStory(final DashboardStory userStory) {
-		this.userStories.add(userStory);
-	}
-
-	@XmlElementWrapper(name = "userStories")
-	@XmlElement(name = "userStory")
-	private List<DashboardStory> getUserStoryList_JAXB() {
-		return this.userStories;
-	}
-
 	public void addEndingSoonTask(final DashboardTask task) {
 		this.endingSoonTasks.add(task);
 	}
@@ -118,4 +108,13 @@ public class Dashboard {
 		return this.readyToDemoStory;
 	}
 
+	@XmlElementWrapper(name = "tasksPartOfSprint")
+	@XmlElement(name = "task")
+	private List<DashboardTask> getTasksPartOfSprint_JAXB() {
+		return this.tasks;
+	}
+
+	public void addTaskPartOfSprint(final DashboardTask dashboardTask) {
+		this.tasks.add(dashboardTask);
+	}
 }
